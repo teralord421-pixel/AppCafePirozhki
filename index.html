@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#4a3121" />
+    <meta
+      name="description"
+      content="Мобільний застосунок Пиріжки.lab: меню, акції, міста, філії та швидке замовлення."
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Пиріжки.lab" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta property="og:title" content="Пиріжки.lab" />
+    <meta property="og:description" content="Смажені. Печені. Свої. Меню, акції та замовлення." />
+    <meta property="og:type" content="website" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="assets/icon-192.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <title>Пиріжки.lab</title>
+  </head>
+  <body>
+    <div class="page-grain" aria-hidden="true"></div>
+    <div class="ambient ambient-left" aria-hidden="true"></div>
+    <div class="ambient ambient-right" aria-hidden="true"></div>
+
+    <main class="app-shell">
+      <header class="app-header">
+        <div class="top-row">
+          <button class="city-pill" type="button" data-action="open-city">
+            <span class="city-dot" aria-hidden="true"></span>
+            <span id="activeCityLabel">Київ</span>
+          </button>
+          <span class="network-pill" id="networkLabel">online</span>
+          <button class="account-pill" type="button" data-action="open-account">
+            <span id="accountLabel">Клієнт</span>
+          </button>
+        </div>
+        <img class="brand-logo" src="assets/brand-logo.png" alt="Пиріжки.lab - смажені, печені, свої" />
+        <p class="brand-note">смажені • печені • свої</p>
+      </header>
+
+      <section class="screen is-active" data-screen="home" aria-labelledby="home-title">
+        <div class="hero-card">
+          <div class="hero-kicker">
+            <p class="eyebrow">український street food</p>
+            <span class="hero-status" id="openStatus">відчинено сьогодні</span>
+          </div>
+          <h1 id="home-title">Гаряче, своє, без зайвого.</h1>
+          <p>
+            Пиріжки.lab - швидка їжа з характером: теплі пиріжки, чесні начинки,
+            крафтове пакування і зрозуміле замовлення з найближчої точки.
+          </p>
+          <div class="hero-actions">
+            <button class="primary-btn" type="button" data-nav="menu">Замовити зараз</button>
+            <button class="ghost-btn" type="button" data-action="open-city">Обрати місто</button>
+          </div>
+        </div>
+
+        <section class="active-order-card" id="homeActiveOrder" hidden aria-live="polite"></section>
+
+        <div class="service-grid">
+          <article class="metric-card">
+            <span class="label">філія</span>
+            <strong id="homeBranchName">Поділ</strong>
+            <p id="homeBranchAddress">вул. Нижній Вал 18</p>
+          </article>
+          <article class="metric-card">
+            <span class="label">самовивіз</span>
+            <strong id="homePickupEta">7-10 хв</strong>
+            <p>після підтвердження</p>
+          </article>
+          <article class="metric-card">
+            <span class="label">доставка</span>
+            <strong id="homeDeliveryMeta">49 грн</strong>
+            <p id="homeDeliveryFree">безкоштовно від 300 грн</p>
+          </article>
+        </div>
+
+        <section class="section-block quick-flow" aria-labelledby="flow-title">
+          <div class="section-heading">
+            <div>
+              <span class="label">як працює</span>
+              <h2 id="flow-title">3 кроки до гарячого пакета</h2>
+            </div>
+          </div>
+          <div class="steps-list">
+            <div><strong>1.</strong><span>Оберіть місто і філію.</span></div>
+            <div><strong>2.</strong><span>Додайте пиріжки, набір або напій.</span></div>
+            <div><strong>3.</strong><span>Оформіть самовивіз чи доставку.</span></div>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="popular-title">
+          <div class="section-heading">
+            <div>
+              <span class="label">швидкий вибір</span>
+              <h2 id="popular-title">Популярне сьогодні</h2>
+            </div>
+            <button class="small-link" type="button" data-nav="menu">Усе меню</button>
+          </div>
+          <div class="horizontal-list" id="featuredMenu"></div>
+        </section>
+      </section>
+
+      <section class="screen" data-screen="menu" aria-labelledby="menu-title">
+        <div class="screen-title">
+          <span class="label">смажені • печені • свої</span>
+          <h1 id="menu-title">Меню</h1>
+        </div>
+
+        <div class="search-card">
+          <label for="menuSearch">Пошук по меню</label>
+          <div class="search-row">
+            <input id="menuSearch" type="search" placeholder="Картопля, сир, кава..." autocomplete="off" />
+            <button class="icon-btn" type="button" data-action="clear-search" aria-label="Очистити пошук">×</button>
+          </div>
+          <p id="menuResultMeta">Усе меню доступне зараз.</p>
+        </div>
+
+        <div class="category-row" id="categoryFilters" aria-label="Фільтр меню"></div>
+        <div class="menu-grid" id="menuGrid"></div>
+      </section>
+
+      <section class="screen" data-screen="promos" aria-labelledby="promos-title">
+        <div class="screen-title">
+          <span class="label">чесні пропозиції</span>
+          <h1 id="promos-title">Акції</h1>
+        </div>
+        <div class="promo-list" id="promoList"></div>
+      </section>
+
+      <section class="screen" data-screen="orders" aria-labelledby="orders-title">
+        <div class="screen-title">
+          <span class="label">кошик і оформлення</span>
+          <h1 id="orders-title">Замовлення</h1>
+        </div>
+
+        <section class="active-order-card" id="activeOrderCard" hidden aria-live="polite"></section>
+
+        <section class="checkout-card" aria-labelledby="checkout-title">
+          <div class="section-heading">
+            <div>
+              <span class="label">формат</span>
+              <h2 id="checkout-title">Як отримати</h2>
+            </div>
+          </div>
+          <div class="segmented-control" role="radiogroup" aria-label="Формат замовлення">
+            <label>
+              <input type="radio" name="orderType" value="pickup" checked />
+              <span>Самовивіз</span>
+            </label>
+            <label>
+              <input type="radio" name="orderType" value="delivery" />
+              <span>Доставка</span>
+            </label>
+          </div>
+          <label class="field-label" for="branchSelect">
+            Філія
+            <select id="branchSelect" name="branch"></select>
+          </label>
+        </section>
+
+        <div class="cart-card">
+          <div id="cartList"></div>
+          <div id="cartSummary" class="cart-summary"></div>
+        </div>
+
+        <form class="order-form" id="orderForm">
+          <label>
+            Ім'я
+            <input name="name" type="text" autocomplete="name" placeholder="Наприклад, Олена" required />
+          </label>
+          <label>
+            Телефон
+            <input
+              name="phone"
+              type="tel"
+              autocomplete="tel"
+              inputmode="tel"
+              pattern="^\+?[\d\s()\-]{9,18}$"
+              placeholder="+380"
+              required
+            />
+          </label>
+          <div class="delivery-fields" id="deliveryFields" hidden>
+            <label>
+              Адреса доставки
+              <input name="address" type="text" autocomplete="street-address" placeholder="Вулиця, будинок" />
+            </label>
+            <label>
+              Квартира / під'їзд
+              <input name="apartment" type="text" placeholder="Необов'язково" />
+            </label>
+          </div>
+          <label>
+            Час
+            <select name="time" id="timeSelect">
+              <option value="asap">Якнайшвидше</option>
+              <option value="15">Через 15 хв</option>
+              <option value="30">Через 30 хв</option>
+              <option value="60">Через 1 год</option>
+            </select>
+          </label>
+          <label>
+            Оплата
+            <select name="payment">
+              <option value="card">Карткою при отриманні</option>
+              <option value="cash">Готівкою</option>
+              <option value="online">Онлайн після дзвінка оператора</option>
+            </select>
+          </label>
+          <label>
+            Коментар
+            <textarea name="comment" rows="3" placeholder="Без цибулі, заберу через 15 хв..."></textarea>
+          </label>
+          <button class="primary-btn wide" type="submit">Підтвердити замовлення</button>
+          <p class="form-hint" id="orderHint">Після підтвердження замовлення збережеться в історії на цьому пристрої.</p>
+        </form>
+
+        <section class="section-block compact" aria-labelledby="history-title">
+          <div class="section-heading">
+            <h2 id="history-title">Історія</h2>
+            <button class="small-link" type="button" data-action="clear-history">Очистити</button>
+          </div>
+          <div id="orderHistory"></div>
+        </section>
+      </section>
+
+      <section class="screen" data-screen="locations" aria-labelledby="locations-title">
+        <div class="screen-title">
+          <span class="label">оберіть точку поруч</span>
+          <h1 id="locations-title">Міста</h1>
+        </div>
+        <div class="location-list" id="locationList"></div>
+      </section>
+
+      <section class="screen" data-screen="staff" aria-labelledby="staff-title">
+        <div class="screen-title">
+          <span class="label">робочий кабінет</span>
+          <h1 id="staff-title">Працівник</h1>
+        </div>
+
+        <section class="section-block scanner-card" aria-labelledby="scanner-title">
+          <div class="section-heading">
+            <div>
+              <span class="label">видача</span>
+              <h2 id="scanner-title">Перевірка QR замовлення</h2>
+            </div>
+          </div>
+          <video class="scanner-video" id="qrScannerVideo" playsinline muted hidden></video>
+          <div class="scanner-actions">
+            <button class="ghost-btn" type="button" data-action="start-qr-scan">Сканувати камерою</button>
+            <button class="ghost-btn danger-outline" type="button" data-action="stop-qr-scan">Зупинити</button>
+          </div>
+          <div class="search-row">
+            <input id="workerScanInput" type="text" placeholder="LAB-123456" autocomplete="off" />
+            <button class="icon-btn" type="button" data-action="verify-order-code" aria-label="Перевірити">✓</button>
+          </div>
+          <p class="form-hint" id="workerScanResult">Відскануйте QR або введіть код замовлення вручну.</p>
+        </section>
+
+        <section class="section-block compact" aria-labelledby="staff-orders-title">
+          <div class="section-heading">
+            <div>
+              <span class="label">черга</span>
+              <h2 id="staff-orders-title">Замовлення</h2>
+            </div>
+          </div>
+          <div class="staff-orders" id="staffOrders"></div>
+        </section>
+      </section>
+
+      <section class="screen" data-screen="admin" aria-labelledby="admin-title">
+        <div class="screen-title">
+          <span class="label">керування</span>
+          <h1 id="admin-title">Адміністратор</h1>
+        </div>
+
+        <section class="section-block admin-panel" aria-labelledby="admin-products-title">
+          <div class="section-heading">
+            <div>
+              <span class="label">меню</span>
+              <h2 id="admin-products-title">Товари</h2>
+            </div>
+            <button class="small-link" type="button" data-action="new-product">Новий товар</button>
+          </div>
+          <form class="admin-form" id="adminProductForm">
+            <input type="hidden" name="productId" />
+            <label>
+              Назва
+              <input name="productName" type="text" placeholder="Пиріжок з картоплею" required />
+            </label>
+            <label>
+              Категорія
+              <select name="productCategory" required></select>
+            </label>
+            <label>
+              Позначка
+              <input name="productMark" type="text" maxlength="2" placeholder="К" required />
+            </label>
+            <label>
+              Ціна, грн
+              <input name="productPrice" type="number" min="1" step="1" required />
+            </label>
+            <label class="span-2">
+              Опис
+              <textarea name="productDescription" rows="3" required></textarea>
+            </label>
+            <label>
+              Теги через кому
+              <input name="productTags" type="text" placeholder="хіт, вегетаріанський" />
+            </label>
+            <label>
+              Вага
+              <input name="productWeight" type="text" placeholder="95 г" />
+            </label>
+            <label>
+              Калорійність
+              <input name="productKcal" type="text" placeholder="214 ккал" />
+            </label>
+            <label>
+              У популярному
+              <select name="productFeatured">
+                <option value="false">Ні</option>
+                <option value="true">Так</option>
+              </select>
+            </label>
+            <label class="span-2">
+              Фото товару (необов'язково)
+              <input type="file" id="productImageFile" accept="image/*" />
+              <input type="hidden" name="productImage" />
+              <img id="productImagePreview" alt="Попередній перегляд фото" style="max-width:160px;max-height:120px;border-radius:10px;border:1px solid var(--line);margin-top:8px;display:none;" />
+              <button type="button" class="small-link" data-action="clear-product-image" style="margin-top:6px;">Очистити фото</button>
+            </label>
+            <label class="span-2">
+              Склад через кому
+              <textarea name="productIngredients" rows="2"></textarea>
+            </label>
+            <label class="span-2">
+              Алергени через кому
+              <input name="productAllergens" type="text" placeholder="глютен, молоко" />
+            </label>
+            <button class="primary-btn wide span-2" type="submit">Зберегти товар</button>
+          </form>
+          <div class="admin-list" id="adminProductList"></div>
+        </section>
+
+        <section class="section-block admin-panel" aria-labelledby="admin-promos-title">
+          <div class="section-heading">
+            <div>
+              <span class="label">акції</span>
+              <h2 id="admin-promos-title">Промо</h2>
+            </div>
+            <button class="small-link" type="button" data-action="new-promo">Нова акція</button>
+          </div>
+          <form class="admin-form" id="adminPromoForm">
+            <input type="hidden" name="promoId" />
+            <label>
+              Назва
+              <input name="promoTitle" type="text" required />
+            </label>
+            <label>
+              Промокод
+              <input name="promoCode" type="text" placeholder="SVOI10" required />
+            </label>
+            <label>
+              Знижка, %
+              <input name="promoDiscount" type="number" min="1" max="90" step="1" required />
+            </label>
+            <label>
+              Мін. сума, грн
+              <input name="promoMinSubtotal" type="number" min="0" step="1" required />
+            </label>
+            <label class="span-2">
+              Опис
+              <textarea name="promoText" rows="3" required></textarea>
+            </label>
+            <button class="primary-btn wide span-2" type="submit">Зберегти акцію</button>
+          </form>
+          <div class="admin-list" id="adminPromoList"></div>
+        </section>
+      </section>
+
+      <section class="screen" data-screen="profile" aria-labelledby="profile-title">
+        <div class="screen-title">
+          <span class="label">свої отримують більше</span>
+          <h1 id="profile-title">Профіль</h1>
+        </div>
+
+        <section class="loyalty-card" aria-labelledby="loyalty-title">
+          <div class="section-heading">
+            <div>
+              <span class="label">програма лояльності</span>
+              <h2 id="loyalty-title">Клуб своїх</h2>
+            </div>
+            <strong id="loyaltyPoints">0 балів</strong>
+          </div>
+          <div class="progress-track" aria-hidden="true">
+            <span id="loyaltyProgress"></span>
+          </div>
+          <p id="loyaltyText">Оформіть перше замовлення, щоб отримати бали.</p>
+          <button class="small-link" type="button" data-action="toggle-bonus" id="bonusToggle" disabled>
+            Списати 100 балів
+          </button>
+        </section>
+
+        <form class="profile-form" id="profileForm">
+          <label>
+            Ім'я
+            <input name="profileName" type="text" autocomplete="name" placeholder="Ваше ім'я" />
+          </label>
+          <label>
+            Телефон
+            <input
+              name="profilePhone"
+              type="tel"
+              autocomplete="tel"
+              inputmode="tel"
+              pattern="^\+?[\d\s()\-]{9,18}$"
+              placeholder="+380"
+            />
+          </label>
+          <label>
+            День народження
+            <input name="profileBirthday" type="date" />
+          </label>
+          <button class="primary-btn wide" type="submit">Зберегти профіль</button>
+          <p class="form-hint">Дані зберігаються тільки на цьому пристрої.</p>
+        </form>
+
+        <section class="section-block compact" aria-labelledby="favorites-title">
+          <div class="section-heading">
+            <h2 id="favorites-title">Улюблене</h2>
+            <button class="small-link" type="button" data-action="clear-favorites">Очистити</button>
+          </div>
+          <div class="favorites-list" id="favoritesList"></div>
+        </section>
+
+      </section>
+
+      <nav class="bottom-nav" aria-label="Основна навігація">
+        <button class="nav-item is-active" type="button" data-nav="home">Головна</button>
+        <button class="nav-item" type="button" data-nav="menu">Меню</button>
+        <button class="nav-item" type="button" data-nav="promos">Акції</button>
+        <button class="nav-item" type="button" data-nav="orders">
+          Замовлення <span class="cart-badge" id="cartBadge">0</span>
+        </button>
+        <button class="nav-item" type="button" data-nav="locations">Міста</button>
+        <button class="nav-item role-nav" type="button" data-nav="staff" hidden>Працівник</button>
+        <button class="nav-item role-nav" type="button" data-nav="admin" hidden>Адмін</button>
+        <button class="nav-item" type="button" data-nav="profile">Профіль</button>
+      </nav>
+    </main>
+
+    <dialog class="city-dialog" id="cityDialog">
+      <form method="dialog" class="dialog-panel">
+        <div class="section-heading">
+          <div>
+            <span class="label">де готуємо</span>
+            <h2>Оберіть місто</h2>
+          </div>
+          <button class="icon-btn" value="close" aria-label="Закрити">×</button>
+        </div>
+        <div id="cityDialogList" class="dialog-city-list"></div>
+      </form>
+    </dialog>
+
+    <dialog class="order-dialog" id="orderDialog">
+      <form method="dialog" class="dialog-panel">
+        <span class="label">замовлення прийнято</span>
+        <h2 id="orderDialogTitle">LAB-000000</h2>
+        <div class="qr-card" id="orderQr" aria-label="QR-код замовлення"></div>
+        <p id="orderDialogText">Деталі замовлення збережено.</p>
+        <button class="primary-btn wide" value="close">Зрозуміло</button>
+      </form>
+    </dialog>
+
+    <dialog class="account-dialog" id="accountDialog">
+      <form method="dialog" class="dialog-panel">
+        <div class="section-heading">
+          <div>
+            <span class="label">доступ</span>
+            <h2>Вхід в аккаунт</h2>
+          </div>
+          <button class="icon-btn" value="close" aria-label="Закрити">×</button>
+        </div>
+        <p class="form-hint">Працівник PIN 2222, адміністратор PIN 9999. Авторизація через сервер API.</p>
+        <label class="field-label" for="accountPin">
+          PIN
+          <input id="accountPin" type="password" inputmode="numeric" autocomplete="one-time-code" placeholder="PIN для ролі" />
+        </label>
+        <div class="account-actions">
+          <button class="ghost-btn" type="button" data-role-login="customer">Клієнт</button>
+          <button class="ghost-btn" type="button" data-role-login="worker">Працівник</button>
+          <button class="primary-btn" type="button" data-role-login="admin">Адмін</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="product-dialog" id="productDialog">
+      <form method="dialog" class="dialog-panel product-panel">
+        <button class="icon-btn dialog-close" value="close" aria-label="Закрити">×</button>
+        <div id="productDialogContent"></div>
+      </form>
+    </dialog>
+
+    <template id="emptyCartTemplate">
+      <div class="empty-state">
+        <strong>Кошик порожній</strong>
+        <p>Додайте позиції з меню, а потім оформіть самовивіз або доставку.</p>
+        <button class="ghost-btn" type="button" data-nav="menu">Перейти в меню</button>
+      </div>
+    </template>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="sr-only" id="statusLive" aria-live="polite"></div>
+
+    <script src="app.js" defer></script>
+  </body>
+</html>

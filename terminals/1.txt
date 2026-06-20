@@ -1,0 +1,17 @@
+---
+pid: 32656
+cwd: "D:\ProgramaNaZakazDlyaKafe – RobochayaVersia2"
+command: "python main.py --no-browser --port 8010"
+started_at: 2026-06-17T10:38:54.570Z
+running_for_ms: 6700005  
+---
+Пиріжки.lab app is running: http://127.0.0.1:8010/
+API docs: http://127.0.0.1:8010/docs
+Press Ctrl+C to stop.
+INFO:     Started server process [29248]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8010 (Press CTRL+C to quit)
+INFO:     127.0.0.1:60424 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60476 - "GET /api/catalog HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60479 - "POST /api/orders HTTP/1.1" 201 Created
