@@ -1,4 +1,4 @@
-const cacheName = "pyrizhky-lab-v7";
+const cacheName = "pyrizhky-lab-v8";
 const assets = [
   "./",
   "./index.html",
@@ -27,6 +27,9 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
+  if (url.pathname.startsWith("/admin")) {
+    return;
+  }
   if (url.pathname.startsWith("/api/")) {
     event.respondWith(fetch(event.request));
     return;

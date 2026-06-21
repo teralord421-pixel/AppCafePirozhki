@@ -3,9 +3,14 @@
  * For GitHub Pages admin panel pointing to a remote API:
  *   const API_BASE_URL = "https://your-api.example.com";
  */
-const API_BASE_URL = window.location.origin.includes("github.io")
-  ? "https://YOUR_API_HOST.example.com"
-  : window.location.origin.replace(/\/admin\/?$/, "");
+function resolveApiBaseUrl() {
+  if (window.location.origin.includes("github.io")) {
+    return "https://YOUR_API_HOST.example.com";
+  }
+  return window.location.origin;
+}
+
+const API_BASE_URL = resolveApiBaseUrl();
 
 const TOKEN_KEY = "admin_jwt_token";
 const ROLE_KEY = "admin_role";
@@ -45,24 +50,35 @@ function requireAuth() {
 }
 
 async function apiRequest(path, options = {}) {
+  const { skipAuthRedirect = false, ...fetchOptions } = options;
   const token = getToken();
   const headers = {
     "Content-Type": "application/json",
-    ...(options.headers || {}),
+    ...(fetchOptions.headers || {}),
   };
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
+    ...fetchOptions,
     headers,
   });
 
   if (response.status === 401) {
     clearAuth();
-    window.location.href = "index.html";
-    throw new Error("Unauthorized");
+    const isAuthRequest = path.includes("/login");
+    if (!skipAuthRedirect && !isAuthRequest && !isLoginPage()) {
+      window.location.replace("index.html");
+    }
+    let message = "Unauthorized";
+    try {
+      const data = await response.json();
+      if (typeof data?.detail === "string") message = data.detail;
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(message);
   }
 
   if (response.status === 204) {
@@ -81,13 +97,22 @@ async function apiRequest(path, options = {}) {
 
 // ─── Login page ─────────────────────────────────────────────
 
-function initLoginPage() {
+async function initLoginPage() {
   const form = document.getElementById("login-form");
   if (!form) return;
 
-  if (getToken()) {
-    window.location.href = "dashboard.html";
-    return;
+  const token = getToken();
+  if (token) {
+    try {
+      const me = await apiRequest("/api/me", { skipAuthRedirect: true });
+      if (me.role === "admin") {
+        window.location.replace("dashboard.html");
+        return;
+      }
+      clearAuth();
+    } catch {
+      clearAuth();
+    }
   }
 
   form.addEventListener("submit", async (e) => {
@@ -109,7 +134,7 @@ function initLoginPage() {
       }
 
       setToken(data.access_token, data.role);
-      window.location.href = "dashboard.html";
+      window.location.replace("dashboard.html");
     } catch (err) {
       errorEl.textContent = err.message;
       errorEl.classList.remove("hidden");
@@ -741,10 +766,18 @@ function escapeHtml(str) {
 
 // ─── Bootstrap ──────────────────────────────────────────────
 
+async function unregisterMainServiceWorker() {
+  if (!("serviceWorker" in navigator)) return;
+  const registrations = await navigator.serviceWorker.getRegistrations();
+  await Promise.all(registrations.map((registration) => registration.unregister()));
+}
+
 document.addEventListener("DOMContentLoaded", () => {
-  if (isLoginPage()) {
-    initLoginPage();
-    return;
-  }
-  initDashboard();
+  unregisterMainServiceWorker().finally(() => {
+    if (isLoginPage()) {
+      initLoginPage().catch(() => {});
+      return;
+    }
+    initDashboard();
+  });
 });
