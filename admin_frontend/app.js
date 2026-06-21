@@ -29,10 +29,16 @@ function clearAuth() {
   localStorage.removeItem(ROLE_KEY);
 }
 
+function isLoginPage() {
+  return Boolean(document.getElementById("login-form"));
+}
+
 function requireAuth() {
   const token = getToken();
   if (!token) {
-    window.location.href = "index.html";
+    if (!isLoginPage()) {
+      window.location.href = "index.html";
+    }
     return null;
   }
   return token;
@@ -736,6 +742,9 @@ function escapeHtml(str) {
 // ─── Bootstrap ──────────────────────────────────────────────
 
 document.addEventListener("DOMContentLoaded", () => {
-  initLoginPage();
+  if (isLoginPage()) {
+    initLoginPage();
+    return;
+  }
   initDashboard();
 });
