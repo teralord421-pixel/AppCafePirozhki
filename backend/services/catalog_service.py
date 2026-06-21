@@ -9,11 +9,16 @@ from sqlalchemy.orm import selectinload
 
 from models.city import Branch, City
 from models.menu import MenuItem, ProductDetail
+from models.order import Order
 from models.promo_code import PromoCode
 from schemas.catalog import (
+    BranchCreate,
     BranchOut,
+    BranchUpdate,
     CatalogOut,
+    CityCreate,
     CityOut,
+    CityUpdate,
     MenuItemCreate,
     MenuItemOut,
     ProductDetailsOut,
@@ -50,30 +55,127 @@ def _menu_to_out(item: MenuItem) -> MenuItemOut:
     )
 
 
+def _branch_to_out(branch: Branch) -> BranchOut:
+    return BranchOut(
+        id=branch.id,
+        name=branch.name,
+        address=branch.address,
+        phone=branch.phone,
+        hours=branch.hours,
+        pickupEta=branch.pickup_eta,
+    )
+
+
+def _city_to_out(city: City) -> CityOut:
+    return CityOut(
+        id=city.id,
+        name=city.name,
+        deliveryFee=city.delivery_fee,
+        freeDeliveryFrom=city.free_delivery_from,
+        deliveryEta=city.delivery_eta,
+        branches=[_branch_to_out(branch) for branch in city.branches],
+    )
+
+
+async def _get_city_entity(db: AsyncSession, city_id: str) -> City:
+    result = await db.execute(
+        select(City).options(selectinload(City.branches)).where(City.id == city_id)
+    )
+    city = result.scalar_one_or_none()
+    if not city:
+        raise HTTPException(status_code=404, detail="Місто не знайдено")
+    return city
+
+
+async def _get_branch_entity(db: AsyncSession, branch_id: str) -> Branch:
+    result = await db.execute(select(Branch).where(Branch.id == branch_id))
+    branch = result.scalar_one_or_none()
+    if not branch:
+        raise HTTPException(status_code=404, detail="Філію не знайдено")
+    return branch
+
+
 async def list_cities(db: AsyncSession) -> list[CityOut]:
     result = await db.execute(select(City).options(selectinload(City.branches)).order_by(City.name))
     cities = result.scalars().all()
-    return [
-        CityOut(
-            id=city.id,
-            name=city.name,
-            deliveryFee=city.delivery_fee,
-            freeDeliveryFrom=city.free_delivery_from,
-            deliveryEta=city.delivery_eta,
-            branches=[
-                BranchOut(
-                    id=branch.id,
-                    name=branch.name,
-                    address=branch.address,
-                    phone=branch.phone,
-                    hours=branch.hours,
-                    pickupEta=branch.pickup_eta,
-                )
-                for branch in city.branches
-            ],
-        )
-        for city in cities
-    ]
+    return [_city_to_out(city) for city in cities]
+
+
+async def get_city(db: AsyncSession, city_id: str) -> CityOut:
+    city = await _get_city_entity(db, city_id)
+    return _city_to_out(city)
+
+
+async def save_city(db: AsyncSession, payload: CityCreate) -> CityOut:
+    city_id = payload.id or _slug_id("city", payload.name)
+    result = await db.execute(select(City).where(City.id == city_id))
+    city = result.scalar_one_or_none()
+    if city is None:
+        city = City(id=city_id)
+        db.add(city)
+
+    city.name = payload.name
+    city.delivery_fee = payload.delivery_fee
+    city.free_delivery_from = payload.free_delivery_from
+    city.delivery_eta = payload.delivery_eta
+    await db.flush()
+    await db.refresh(city, ["branches"])
+    return _city_to_out(city)
+
+
+async def update_city(db: AsyncSession, city_id: str, payload: CityUpdate) -> CityOut:
+    city = await _get_city_entity(db, city_id)
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        setattr(city, field, value)
+    await db.flush()
+    await db.refresh(city, ["branches"])
+    return _city_to_out(city)
+
+
+async def delete_city(db: AsyncSession, city_id: str) -> None:
+    city = await _get_city_entity(db, city_id)
+    orders = await db.execute(select(Order.id).where(Order.city_id == city_id).limit(1))
+    if orders.scalar_one_or_none():
+        raise HTTPException(status_code=409, detail="Неможливо видалити місто з існуючими замовленнями")
+    await db.delete(city)
+
+
+async def save_branch(db: AsyncSession, payload: BranchCreate) -> BranchOut:
+    await _get_city_entity(db, payload.city_id)
+    branch_id = payload.id or _slug_id(payload.city_id, payload.name)
+    result = await db.execute(select(Branch).where(Branch.id == branch_id))
+    branch = result.scalar_one_or_none()
+    if branch is None:
+        branch = Branch(id=branch_id, city_id=payload.city_id)
+        db.add(branch)
+    else:
+        branch.city_id = payload.city_id
+
+    branch.name = payload.name
+    branch.address = payload.address
+    branch.phone = payload.phone
+    branch.hours = payload.hours
+    branch.pickup_eta = payload.pickup_eta
+    await db.flush()
+    await db.refresh(branch)
+    return _branch_to_out(branch)
+
+
+async def update_branch(db: AsyncSession, branch_id: str, payload: BranchUpdate) -> BranchOut:
+    branch = await _get_branch_entity(db, branch_id)
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        setattr(branch, field, value)
+    await db.flush()
+    await db.refresh(branch)
+    return _branch_to_out(branch)
+
+
+async def delete_branch(db: AsyncSession, branch_id: str) -> None:
+    branch = await _get_branch_entity(db, branch_id)
+    orders = await db.execute(select(Order.id).where(Order.branch_id == branch_id).limit(1))
+    if orders.scalar_one_or_none():
+        raise HTTPException(status_code=409, detail="Неможливо видалити філію з існуючими замовленнями")
+    await db.delete(branch)
 
 
 async def get_catalog(db: AsyncSession) -> CatalogOut:

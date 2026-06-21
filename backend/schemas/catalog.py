@@ -29,6 +29,47 @@ class CityOut(BaseModel):
     model_config = {"populate_by_name": True}
 
 
+class CityCreate(BaseModel):
+    id: str | None = None
+    name: str
+    delivery_fee: int = Field(default=0, ge=0, alias="deliveryFee")
+    free_delivery_from: int = Field(default=0, ge=0, alias="freeDeliveryFrom")
+    delivery_eta: str = Field(default="", alias="deliveryEta")
+
+    model_config = {"populate_by_name": True}
+
+
+class CityUpdate(BaseModel):
+    name: str | None = None
+    delivery_fee: int | None = Field(default=None, ge=0, alias="deliveryFee")
+    free_delivery_from: int | None = Field(default=None, ge=0, alias="freeDeliveryFrom")
+    delivery_eta: str | None = Field(default=None, alias="deliveryEta")
+
+    model_config = {"populate_by_name": True}
+
+
+class BranchCreate(BaseModel):
+    id: str | None = None
+    city_id: str = Field(alias="cityId")
+    name: str
+    address: str = ""
+    phone: str = ""
+    hours: str = ""
+    pickup_eta: str = Field(default="", alias="pickupEta")
+
+    model_config = {"populate_by_name": True}
+
+
+class BranchUpdate(BaseModel):
+    name: str | None = None
+    address: str | None = None
+    phone: str | None = None
+    hours: str | None = None
+    pickup_eta: str | None = Field(default=None, alias="pickupEta")
+
+    model_config = {"populate_by_name": True}
+
+
 class ProductDetailsOut(BaseModel):
     weight: str
     kcal: str

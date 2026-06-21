@@ -254,6 +254,14 @@ a {
   font-size: 1.15rem;
 }
 
+.locations-branches-toolbar {
+  margin-top: 32px;
+}
+
+tr.selected td {
+  background: rgba(59, 130, 246, 0.12);
+}
+
 .table-wrap {
   overflow-x: auto;
   background: var(--surface);

@@ -20,6 +20,7 @@
       <button class="tab active" data-panel="panel-users">Пользователи</button>
       <button class="tab" data-panel="panel-orders">Заказы</button>
       <button class="tab" data-panel="panel-promotions">Акции</button>
+      <button class="tab" data-panel="panel-locations">Локации</button>
     </nav>
 
     <!-- Users -->
@@ -61,6 +62,51 @@
             </tr>
           </thead>
           <tbody id="orders-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Locations -->
+    <section id="panel-locations" class="panel">
+      <div class="panel-toolbar">
+        <h2>Города</h2>
+        <button id="add-city-btn" class="btn btn-primary btn-sm">+ Добавить город</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Название</th>
+              <th>Доставка</th>
+              <th>Бесплатно от</th>
+              <th>ETA</th>
+              <th>Филиалы</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody id="cities-tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="panel-toolbar locations-branches-toolbar">
+        <h2 id="branches-panel-title">Филиалы</h2>
+        <button id="add-branch-btn" class="btn btn-primary btn-sm" disabled>+ Добавить филиал</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Название</th>
+              <th>Адрес</th>
+              <th>Телефон</th>
+              <th>Часы</th>
+              <th>Самовывоз</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody id="branches-tbody"></tbody>
         </table>
       </div>
     </section>
@@ -125,12 +171,12 @@
       <form id="order-form">
         <input type="hidden" id="order-id">
         <div class="form-group">
-          <label for="order-city-id">ID города</label>
-          <input type="text" id="order-city-id" required placeholder="kyiv">
+          <label for="order-city-id">Город</label>
+          <select id="order-city-id" required></select>
         </div>
         <div class="form-group">
-          <label for="order-branch-id">ID филиала</label>
-          <input type="text" id="order-branch-id" required placeholder="kyiv-podil">
+          <label for="order-branch-id">Филиал</label>
+          <select id="order-branch-id" required></select>
         </div>
         <div class="form-group">
           <label for="order-client-name">Имя клиента</label>
@@ -156,6 +202,74 @@
         </div>
         <div class="modal-actions">
           <button type="button" id="order-cancel" class="btn btn-secondary">Отмена</button>
+          <button type="submit" class="btn btn-primary">Сохранить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- City modal -->
+  <div id="city-modal" class="modal-overlay">
+    <div class="modal">
+      <h3 id="city-modal-title">Новый город</h3>
+      <form id="city-form">
+        <input type="hidden" id="city-id">
+        <div class="form-group">
+          <label for="city-name">Название</label>
+          <input type="text" id="city-name" required>
+        </div>
+        <div class="form-group">
+          <label for="city-delivery-fee">Стоимость доставки (грн)</label>
+          <input type="number" id="city-delivery-fee" min="0" value="0" required>
+        </div>
+        <div class="form-group">
+          <label for="city-free-delivery-from">Бесплатная доставка от (грн)</label>
+          <input type="number" id="city-free-delivery-from" min="0" value="0" required>
+        </div>
+        <div class="form-group">
+          <label for="city-delivery-eta">Время доставки</label>
+          <input type="text" id="city-delivery-eta" placeholder="25-35 хв">
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="city-cancel" class="btn btn-secondary">Отмена</button>
+          <button type="submit" class="btn btn-primary">Сохранить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Branch modal -->
+  <div id="branch-modal" class="modal-overlay">
+    <div class="modal">
+      <h3 id="branch-modal-title">Новый филиал</h3>
+      <form id="branch-form">
+        <input type="hidden" id="branch-id">
+        <div class="form-group">
+          <label for="branch-city-id">Город</label>
+          <select id="branch-city-id" required></select>
+        </div>
+        <div class="form-group">
+          <label for="branch-name">Название</label>
+          <input type="text" id="branch-name" required>
+        </div>
+        <div class="form-group">
+          <label for="branch-address">Адрес</label>
+          <input type="text" id="branch-address" required>
+        </div>
+        <div class="form-group">
+          <label for="branch-phone">Телефон</label>
+          <input type="text" id="branch-phone" placeholder="+380...">
+        </div>
+        <div class="form-group">
+          <label for="branch-hours">Часы работы</label>
+          <input type="text" id="branch-hours" placeholder="08:00-21:00">
+        </div>
+        <div class="form-group">
+          <label for="branch-pickup-eta">Самовывоз (ETA)</label>
+          <input type="text" id="branch-pickup-eta" placeholder="7-10 хв">
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="branch-cancel" class="btn btn-secondary">Отмена</button>
           <button type="submit" class="btn btn-primary">Сохранить</button>
         </div>
       </form>
