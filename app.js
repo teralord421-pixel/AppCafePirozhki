@@ -1509,14 +1509,22 @@ function orderStatus(order) {
 function renderQr(seed) {
   const quietZone = 4;
   const matrix = qrMatrix(seed);
-  const gridSize = matrix.length + quietZone * 2;
-  const cells = Array.from({ length: gridSize * gridSize }, (_, index) => {
-    const x = (index % gridSize) - quietZone;
-    const y = Math.floor(index / gridSize) - quietZone;
-    const active = matrix[y]?.[x] || false;
-    return `<span class="${active ? "is-dark" : ""}"></span>`;
-  }).join("");
-  return `<div class="qr-grid" style="--qr-cols:${gridSize}">${cells}</div>`;
+  const moduleCount = matrix.length;
+  const size = moduleCount + quietZone * 2;
+  const rects = [];
+
+  for (let y = 0; y < size; y += 1) {
+    for (let x = 0; x < size; x += 1) {
+      const mx = x - quietZone;
+      const my = y - quietZone;
+      if (matrix[my]?.[mx]) {
+        rects.push(`<rect x="${x}" y="${y}" width="1" height="1"/>`);
+      }
+    }
+  }
+
+  const label = cleanText(seed);
+  return `<svg class="qr-svg" viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges" role="img" aria-label="QR ${label}"><rect class="qr-bg" width="${size}" height="${size}"/><g class="qr-fg">${rects.join("")}</g></svg>`;
 }
 
 function activeOrderMarkup(order, compact = false) {
