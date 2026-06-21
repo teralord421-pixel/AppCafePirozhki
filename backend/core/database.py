@@ -25,6 +25,8 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def init_db() -> None:
+    from sqlalchemy import text
+
     from models import (  # noqa: F401
         Branch,
         City,
@@ -39,3 +41,12 @@ async def init_db() -> None:
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        migrations = [
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS display_name VARCHAR(120) NOT NULL DEFAULT ''",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(32) NOT NULL DEFAULT ''",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS birthday VARCHAR(32) NOT NULL DEFAULT ''",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS favorites JSONB NOT NULL DEFAULT '[]'::jsonb",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS loyalty_spent_points INTEGER NOT NULL DEFAULT 0",
+        ]
+        for statement in migrations:
+            await conn.execute(text(statement))

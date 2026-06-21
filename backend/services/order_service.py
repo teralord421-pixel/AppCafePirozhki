@@ -86,6 +86,7 @@ async def _calculate_order(db: AsyncSession, payload: OrderCreateFull) -> dict[s
         "city": city,
         "branch": branch,
         "items_count": items_count,
+        "subtotal": subtotal,
         "promo_code": promo_code,
         "bonus_discount": bonus_discount,
         "total": total,

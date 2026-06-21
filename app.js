@@ -360,6 +360,13 @@ const initialState = {
   staffStatuses: {},
   favorites: [],
   spentPoints: 0,
+  loyalty: {
+    spentPoints: 0,
+    totalSpent: 0,
+    earnedPoints: 0,
+    points: 0,
+  },
+  clientSession: null,
   useBonus: false,
   menuItems: cloneData(defaultMenuItems),
   productDetails: cloneData(defaultProductDetails),
@@ -377,6 +384,7 @@ let menuItems = state.menuItems;
 let productDetails = state.productDetails;
 let promos = state.promos;
 let authToken = state.authToken || null;
+let clientAuthToken = state.clientSession?.token || null;
 let serverOnline = false;
 let staffOrders = [];
 let deferredInstallPrompt = null;
@@ -389,6 +397,33 @@ let workerSocketTimer = null;
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+
+function isClientLoggedIn() {
+  return Boolean(clientAuthToken);
+}
+
+async function clientApiRequest(path, options = {}) {
+  if (!clientAuthToken) throw new Error("Увійдіть в акаунт клієнта");
+  const headers = { ...(options.headers || {}) };
+  if (options.body) headers["Content-Type"] = "application/json";
+  headers.Authorization = `Bearer ${clientAuthToken}`;
+  const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  if (!response.ok) {
+    let message = `Помилка ${response.status}`;
+    try {
+      const data = await response.json();
+      if (typeof data.detail === "string") message = data.detail;
+    } catch {
+      // ignore parse errors
+    }
+    if (response.status === 401) {
+      logoutClient(false);
+    }
+    throw new Error(message);
+  }
+  if (response.status === 204) return null;
+  return response.json();
+}
 
 async function apiRequest(path, options = {}) {
   const headers = { ...(options.headers || {}) };
@@ -635,6 +670,7 @@ function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(storageKey));
     authToken = saved?.authToken || null;
+    clientAuthToken = saved?.clientSession?.token || null;
     return {
       ...initialState,
       ...saved,
@@ -663,6 +699,13 @@ function normalizeState(nextState = {}) {
     staffStatuses: nextState.staffStatuses && typeof nextState.staffStatuses === "object" ? nextState.staffStatuses : {},
     favorites: Array.isArray(nextState.favorites) ? nextState.favorites : [],
     spentPoints: Number(nextState.spentPoints || 0),
+    loyalty: {
+      spentPoints: Number(nextState.loyalty?.spentPoints || 0),
+      totalSpent: Number(nextState.loyalty?.totalSpent || 0),
+      earnedPoints: Number(nextState.loyalty?.earnedPoints || 0),
+      points: Number(nextState.loyalty?.points || 0),
+    },
+    clientSession: nextState.clientSession || null,
     useBonus: Boolean(nextState.useBonus),
     menuItems: Array.isArray(nextState.menuItems) ? nextState.menuItems.map(normalizeMenuItem) : cloneData(defaultMenuItems),
     productDetails: normalizeProductDetails(nextState.productDetails || defaultProductDetails),
@@ -673,6 +716,9 @@ function normalizeState(nextState = {}) {
 
 function saveState() {
   state.authToken = authToken;
+  state.clientSession = clientAuthToken
+    ? { token: clientAuthToken, username: state.clientSession?.username || "" }
+    : null;
   const payload = { ...state };
   if (serverOnline) {
     delete payload.menuItems;
@@ -713,12 +759,153 @@ function isFavorite(itemId) {
 }
 
 function loyaltyStats() {
+  const nextReward = 100;
+  if (isClientLoggedIn() && serverOnline) {
+    const loyalty = state.loyalty || {};
+    const points = Number(loyalty.points || 0);
+    return {
+      spent: Number(loyalty.totalSpent || 0),
+      earnedPoints: Number(loyalty.earnedPoints || 0),
+      spentPoints: Number(loyalty.spentPoints || 0),
+      points,
+      nextReward,
+      progress: Math.min(100, Math.round((points / nextReward) * 100)),
+    };
+  }
   const spent = state.orders.reduce((sum, order) => sum + Number(order.total || 0), 0);
   const earnedPoints = Math.floor(spent * 0.05);
-  const points = Math.max(0, earnedPoints - Number(state.spentPoints || 0));
-  const nextReward = 100;
+  const spentPoints = Number(state.spentPoints || 0);
+  const points = Math.max(0, earnedPoints - spentPoints);
   const progress = Math.min(100, Math.round((points / nextReward) * 100));
-  return { spent, earnedPoints, points, nextReward, progress };
+  return { spent, earnedPoints, spentPoints, points, nextReward, progress };
+}
+
+function applyClientProfile(profile) {
+  state.profile = {
+    name: profile.displayName || state.profile.name,
+    phone: profile.phone || state.profile.phone,
+    birthday: profile.birthday || state.profile.birthday,
+  };
+  state.favorites = Array.isArray(profile.favorites) ? profile.favorites : [];
+  state.loyalty = {
+    spentPoints: profile.loyalty?.spentPoints || 0,
+    totalSpent: profile.loyalty?.totalSpent || 0,
+    earnedPoints: profile.loyalty?.earnedPoints || 0,
+    points: profile.loyalty?.points || 0,
+  };
+  state.spentPoints = state.loyalty.spentPoints;
+  state.clientSession = {
+    token: clientAuthToken,
+    username: profile.username || state.clientSession?.username || "",
+  };
+}
+
+async function pushClientProfile() {
+  if (!isClientLoggedIn() || !serverOnline) return;
+  const profile = await clientApiRequest("/api/client/profile", {
+    method: "PUT",
+    body: JSON.stringify({
+      displayName: state.profile.name,
+      phone: state.profile.phone,
+      birthday: state.profile.birthday,
+      favorites: state.favorites,
+    }),
+  });
+  applyClientProfile(profile);
+  saveState();
+}
+
+async function syncClientData() {
+  if (!isClientLoggedIn() || !serverOnline) return;
+  const [profile, orders] = await Promise.all([
+    clientApiRequest("/api/client/profile"),
+    clientApiRequest("/api/client/orders"),
+  ]);
+  applyClientProfile(profile);
+  state.orders = orders.map(mapServerOrder);
+  if (state.activeOrder) {
+    const active = state.orders.find((order) => order.id === state.activeOrder.id);
+    if (active) state.activeOrder = active;
+  }
+  saveState();
+  renderHistory();
+  renderProfile();
+  renderFeatured();
+  renderMenu();
+}
+
+async function loginClient() {
+  const phone = String($("#profileForm")?.elements.profilePhone?.value || state.profile.phone || "").trim();
+  const password = String($("#clientPassword")?.value || "").trim();
+  if (!phone || !isValidPhone(phone)) {
+    showToast("Введіть коректний телефон у профілі");
+    return;
+  }
+  if (password.length < 4) {
+    showToast("Пароль має містити щонайменше 4 символи");
+    return;
+  }
+  if (!serverOnline) {
+    showToast("Сервер недоступний");
+    return;
+  }
+  try {
+    const session = await apiRequest("/api/client/login", {
+      method: "POST",
+      body: JSON.stringify({ username: phone, password }),
+    });
+    clientAuthToken = session.access_token;
+    state.clientSession = { token: clientAuthToken, username: phone };
+    await syncClientData();
+    $("#clientPassword").value = "";
+    renderProfile();
+    showToast("Ви увійшли в акаунт");
+  } catch (error) {
+    showToast(error.message || "Не вдалося увійти");
+  }
+}
+
+async function registerClient() {
+  const phone = String($("#profileForm")?.elements.profilePhone?.value || state.profile.phone || "").trim();
+  const name = String($("#profileForm")?.elements.profileName?.value || state.profile.name || "").trim();
+  const birthday = String($("#profileForm")?.elements.profileBirthday?.value || state.profile.birthday || "");
+  const password = String($("#clientPassword")?.value || "").trim();
+  if (!phone || !isValidPhone(phone)) {
+    showToast("Введіть коректний телефон у профілі");
+    return;
+  }
+  if (password.length < 4) {
+    showToast("Пароль має містити щонайменше 4 символи");
+    return;
+  }
+  if (!serverOnline) {
+    showToast("Сервер недоступний");
+    return;
+  }
+  try {
+    const session = await apiRequest("/api/client/register", {
+      method: "POST",
+      body: JSON.stringify({ phone, name, password, birthday }),
+    });
+    clientAuthToken = session.access_token;
+    state.clientSession = { token: clientAuthToken, username: phone };
+    state.profile = { name, phone, birthday };
+    await pushClientProfile();
+    await syncClientData();
+    $("#clientPassword").value = "";
+    renderProfile();
+    showToast("Акаунт створено");
+  } catch (error) {
+    showToast(error.message || "Не вдалося зареєструватися");
+  }
+}
+
+function logoutClient(notify = true) {
+  clientAuthToken = null;
+  state.clientSession = null;
+  saveState();
+  renderProfile();
+  if (notify) showToast("Ви вийшли з акаунта");
 }
 
 const qrAlphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:";
@@ -1077,15 +1264,21 @@ function removeItem(itemId) {
   renderCart();
 }
 
-function toggleFavorite(itemId) {
-  state.favorites = isFavorite(itemId)
-    ? state.favorites.filter((favoriteId) => favoriteId !== itemId)
-    : [...state.favorites, itemId];
+async function toggleFavorite(itemId) {
+  const added = !isFavorite(itemId);
+  state.favorites = added ? [...state.favorites, itemId] : state.favorites.filter((favoriteId) => favoriteId !== itemId);
   saveState();
   renderFeatured();
   renderMenu();
   renderProfile();
-  showToast(isFavorite(itemId) ? "Додано в улюблене" : "Прибрано з улюбленого");
+  if (isClientLoggedIn() && serverOnline) {
+    try {
+      await pushClientProfile();
+    } catch (error) {
+      showToast(error.message || "Не вдалося зберегти улюблене на сервері");
+    }
+  }
+  showToast(added ? "Додано в улюблене" : "Прибрано з улюбленого");
 }
 
 function openProduct(itemId) {
@@ -1570,11 +1763,22 @@ function renderProfile() {
   form.elements.profilePhone.value = state.profile.phone;
   form.elements.profileBirthday.value = state.profile.birthday;
 
+  const loggedIn = isClientLoggedIn();
+  $("#clientAuthLoggedOut")?.toggleAttribute("hidden", loggedIn);
+  $("#clientAuthLoggedIn")?.toggleAttribute("hidden", !loggedIn);
+  if (loggedIn) {
+    const label = state.profile.name || state.profile.phone || state.clientSession?.username || "клієнт";
+    $("#clientAuthStatus").textContent = `Ви увійшли як ${label}. Дані синхронізуються з сервером.`;
+  }
+  $("#profileSyncHint").textContent = loggedIn
+    ? "Профіль, улюблене, історія та бали зберігаються на сервері."
+    : "Без входу дані зберігаються лише на цьому пристрої.";
+
   const loyalty = loyaltyStats();
   $("#loyaltyPoints").textContent = `${loyalty.points} балів`;
   $("#loyaltyProgress").style.width = `${loyalty.progress}%`;
   $("#loyaltyText").textContent = loyalty.points
-    ? `Нараховано ${loyalty.earnedPoints}, списано ${state.spentPoints}. До бонусу 100 балів залишилось ${Math.max(0, loyalty.nextReward - loyalty.points)}.`
+    ? `Нараховано ${loyalty.earnedPoints}, списано ${loyalty.spentPoints}. До бонусу 100 балів залишилось ${Math.max(0, loyalty.nextReward - loyalty.points)}.`
     : "Оформіть перше замовлення, щоб отримати бали.";
   const bonusToggle = $("#bonusToggle");
   const canUseBonus = loyalty.points >= 100 && subtotal() >= 100;
@@ -2167,25 +2371,29 @@ async function submitOrder(form) {
   const usedBonus = bonusDiscountAmount() > 0;
   let order;
 
+  const orderPayload = {
+    cityId: state.cityId,
+    branchId: state.branchId,
+    orderType: state.orderType,
+    items: cartEntries().map(({ item, quantity }) => ({ id: item.id, quantity })),
+    promoCode: state.promoCode,
+    useBonus: state.useBonus,
+    time: formData.get("time") || "",
+    payment: formData.get("payment"),
+    address: formData.get("address") || "",
+    apartment: formData.get("apartment") || "",
+    customerName: formData.get("name"),
+    customerPhone: formData.get("phone"),
+  };
+
   try {
     if (serverOnline) {
+      const request = isClientLoggedIn() ? clientApiRequest : apiRequest;
+      const path = isClientLoggedIn() ? "/api/client/orders" : "/api/orders";
       order = mapServerOrder(
-        await apiRequest("/api/orders", {
+        await request(path, {
           method: "POST",
-          body: JSON.stringify({
-            cityId: state.cityId,
-            branchId: state.branchId,
-            orderType: state.orderType,
-            items: cartEntries().map(({ item, quantity }) => ({ id: item.id, quantity })),
-            promoCode: state.promoCode,
-            useBonus: state.useBonus,
-            time: formData.get("time") || "",
-            payment: formData.get("payment"),
-            address: formData.get("address") || "",
-            apartment: formData.get("apartment") || "",
-            customerName: formData.get("name"),
-            customerPhone: formData.get("phone"),
-          }),
+          body: JSON.stringify(orderPayload),
         })
       );
     } else {
@@ -2226,10 +2434,18 @@ async function submitOrder(form) {
     return;
   }
 
-  state.orders = [order, ...state.orders].slice(0, 10);
+  if (isClientLoggedIn() && serverOnline) {
+    try {
+      await syncClientData();
+    } catch {
+      state.orders = [order, ...state.orders].slice(0, 50);
+    }
+  } else {
+    state.orders = [order, ...state.orders].slice(0, 10);
+    if (usedBonus) state.spentPoints += 100;
+  }
   state.activeOrder = order;
   state.staffStatuses[order.id] = order.status || "new";
-  if (usedBonus) state.spentPoints += 100;
   if (!state.profile.name && order.customer.name) state.profile.name = order.customer.name;
   if (!state.profile.phone && order.customer.phone) state.profile.phone = order.customer.phone;
   state.cart = {};
@@ -2238,7 +2454,9 @@ async function submitOrder(form) {
   saveState();
   form.reset();
   $("#orderHint").textContent = serverOnline
-    ? "Замовлення збережено на сервері та в історії на цьому пристрої."
+    ? isClientLoggedIn()
+      ? "Замовлення збережено на сервері та в історії вашого акаунта."
+      : "Замовлення збережено на сервері та в історії на цьому пристрої."
     : "Після підтвердження замовлення збережеться в історії на цьому пристрої.";
   $("#orderDialogTitle").textContent = order.id;
   $("#orderQr").innerHTML = renderQr(order.id);
@@ -2255,7 +2473,7 @@ function completeActiveOrder() {
   showToast("Замовлення позначено отриманим");
 }
 
-function saveProfile(form) {
+async function saveProfile(form) {
   const formData = new FormData(form);
   const phone = String(formData.get("profilePhone") || "").trim();
   if (phone && !isValidPhone(phone)) {
@@ -2271,13 +2489,28 @@ function saveProfile(form) {
     birthday: String(formData.get("profileBirthday") || ""),
   };
   saveState();
+  if (isClientLoggedIn() && serverOnline) {
+    try {
+      await pushClientProfile();
+    } catch (error) {
+      showToast(error.message || "Не вдалося зберегти профіль на сервері");
+      return;
+    }
+  }
   renderProfile();
   showToast("Профіль збережено");
 }
 
-function clearFavorites() {
+async function clearFavorites() {
   state.favorites = [];
   saveState();
+  if (isClientLoggedIn() && serverOnline) {
+    try {
+      await pushClientProfile();
+    } catch (error) {
+      showToast(error.message || "Не вдалося очистити улюблене на сервері");
+    }
+  }
   renderFeatured();
   renderMenu();
   renderProfile();
@@ -2350,12 +2583,19 @@ document.addEventListener("click", async (event) => {
   if (target.dataset.action === "clear-cart") clearCart();
   if (target.dataset.action === "remove-promo") removePromo();
   if (target.dataset.action === "clear-history") {
+    if (isClientLoggedIn() && serverOnline) {
+      showToast("Історія зберігається в акаунті на сервері");
+      return;
+    }
     state.orders = [];
     saveState();
     renderHistory();
     renderProfile();
     showToast("Історію очищено");
   }
+  if (target.dataset.action === "client-login") await loginClient();
+  if (target.dataset.action === "client-register") await registerClient();
+  if (target.dataset.action === "client-logout") logoutClient();
   if (target.dataset.action === "clear-favorites") clearFavorites();
   if (target.dataset.action === "complete-active-order") completeActiveOrder();
   if (target.dataset.action === "export-data") exportData();
@@ -2383,7 +2623,7 @@ document.addEventListener("click", async (event) => {
   if (target.dataset.branch && !target.dataset.city) setBranch(target.dataset.branch);
   if (target.dataset.promo) applyPromo(target.dataset.promo);
   if (target.dataset.repeat) repeatOrder(target.dataset.repeat);
-  if (target.dataset.favorite) toggleFavorite(target.dataset.favorite);
+  if (target.dataset.favorite) await toggleFavorite(target.dataset.favorite);
   if (target.dataset.detail) openProduct(target.dataset.detail);
   if (target.dataset.adminEditProduct) loadAdminProduct(target.dataset.adminEditProduct);
   if (target.dataset.adminDeleteProduct) await deleteAdminProduct(target.dataset.adminDeleteProduct);
@@ -2446,7 +2686,7 @@ $("#orderForm").addEventListener("submit", (event) => {
 
 $("#profileForm").addEventListener("submit", (event) => {
   event.preventDefault();
-  saveProfile(event.currentTarget);
+  saveProfile(event.currentTarget).catch(() => {});
 });
 
 const adminProductFormEl = $("#adminProductForm");
@@ -2525,6 +2765,14 @@ async function bootstrapApp() {
     await reloadCatalog();
     state = normalizeState({ ...state, menuItems, productDetails, promos });
     saveState();
+    if (isClientLoggedIn()) {
+      try {
+        await syncClientData();
+      } catch {
+        logoutClient(false);
+        showToast("Сесію клієнта завершено. Увійдіть знову");
+      }
+    }
     renderAll(false);
     if ((state.role === "worker" || state.role === "admin") && !authToken) {
       state.role = "customer";

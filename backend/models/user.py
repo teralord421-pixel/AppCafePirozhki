@@ -1,6 +1,6 @@
 import enum
 
-from sqlalchemy import Enum, String
+from sqlalchemy import Enum, Integer, JSON, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.database import Base
@@ -19,6 +19,11 @@ class User(Base):
     username: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     role: Mapped[UserRole] = mapped_column(Enum(UserRole, name="user_role"), nullable=False)
+    display_name: Mapped[str] = mapped_column(String(120), default="")
+    phone: Mapped[str] = mapped_column(String(32), default="", index=True)
+    birthday: Mapped[str] = mapped_column(String(32), default="")
+    favorites: Mapped[list[str]] = mapped_column(JSON, default=list)
+    loyalty_spent_points: Mapped[int] = mapped_column(Integer, default=0)
 
     client_orders = relationship("Order", back_populates="client", foreign_keys="Order.client_id")
     worker_orders = relationship("Order", back_populates="worker", foreign_keys="Order.worker_id")

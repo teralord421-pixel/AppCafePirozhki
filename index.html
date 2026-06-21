@@ -216,7 +216,7 @@
             <textarea name="comment" rows="3" placeholder="Без цибулі, заберу через 15 хв..."></textarea>
           </label>
           <button class="primary-btn wide" type="submit">Підтвердити замовлення</button>
-          <p class="form-hint" id="orderHint">Після підтвердження замовлення збережеться в історії на цьому пристрої.</p>
+          <p class="form-hint" id="orderHint">Увійдіть у профіль, щоб історія зберігалась в акаунті на сервері.</p>
         </form>
 
         <section class="section-block compact" aria-labelledby="history-title">
@@ -406,6 +406,30 @@
           </button>
         </section>
 
+        <section class="section-block compact client-auth-card" id="clientAuthCard" aria-labelledby="client-auth-title">
+          <div class="section-heading">
+            <div>
+              <span class="label">акаунт</span>
+              <h2 id="client-auth-title">Синхронізація</h2>
+            </div>
+          </div>
+          <div id="clientAuthLoggedOut">
+            <label class="field-label" for="clientPassword">
+              Пароль
+              <input id="clientPassword" type="password" autocomplete="new-password" placeholder="Мінімум 4 символи" />
+            </label>
+            <div class="account-actions">
+              <button class="ghost-btn" type="button" data-action="client-login">Увійти</button>
+              <button class="primary-btn" type="button" data-action="client-register">Зареєструватися</button>
+            </div>
+            <p class="form-hint">Увійдіть за номером телефону з профілю, щоб зберігати улюблене, історію та бали на сервері.</p>
+          </div>
+          <div id="clientAuthLoggedIn" hidden>
+            <p class="form-hint" id="clientAuthStatus">Ви увійшли в акаунт.</p>
+            <button class="small-link" type="button" data-action="client-logout">Вийти з акаунта</button>
+          </div>
+        </section>
+
         <form class="profile-form" id="profileForm">
           <label>
             Ім'я
@@ -427,7 +451,7 @@
             <input name="profileBirthday" type="date" />
           </label>
           <button class="primary-btn wide" type="submit">Зберегти профіль</button>
-          <p class="form-hint">Дані зберігаються тільки на цьому пристрої.</p>
+          <p class="form-hint" id="profileSyncHint">Без входу дані зберігаються лише на цьому пристрої.</p>
         </form>
 
         <section class="section-block compact" aria-labelledby="favorites-title">
