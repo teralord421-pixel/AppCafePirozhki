@@ -1509,13 +1509,14 @@ function orderStatus(order) {
 function renderQr(seed) {
   const quietZone = 4;
   const matrix = qrMatrix(seed);
-  const size = matrix.length + quietZone * 2;
-  return Array.from({ length: size * size }, (_, index) => {
-    const x = (index % size) - quietZone;
-    const y = Math.floor(index / size) - quietZone;
+  const gridSize = matrix.length + quietZone * 2;
+  const cells = Array.from({ length: gridSize * gridSize }, (_, index) => {
+    const x = (index % gridSize) - quietZone;
+    const y = Math.floor(index / gridSize) - quietZone;
     const active = matrix[y]?.[x] || false;
     return `<span class="${active ? "is-dark" : ""}"></span>`;
   }).join("");
+  return `<div class="qr-grid" style="--qr-cols:${gridSize}">${cells}</div>`;
 }
 
 function activeOrderMarkup(order, compact = false) {
