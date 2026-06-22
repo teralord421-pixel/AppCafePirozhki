@@ -488,6 +488,9 @@ function applyCatalog(catalog) {
     )
   );
   promos = catalog.promos.map(normalizePromo);
+  if (Array.isArray(catalog.promotions)) {
+    promotions = catalog.promotions.map(normalizePromotion);
+  }
   serverOnline = true;
 }
 
@@ -501,12 +504,14 @@ async function reloadCatalog() {
     promos,
   });
   saveState();
+  renderHomePromotions();
 }
 
 async function loadPromotions() {
+  if (promotions.length) return promotions;
   try {
     const data = await apiRequest("/api/promotions");
-    promotions = Array.isArray(data) ? data : [];
+    promotions = Array.isArray(data) ? data.map(normalizePromotion) : [];
   } catch {
     promotions = [];
   }
@@ -663,6 +668,14 @@ function normalizeProductDetails(details) {
       },
     ])
   );
+}
+
+function normalizePromotion(promotion) {
+  return {
+    id: Number(promotion?.id) || 0,
+    title: cleanText(promotion?.title) || "Акція",
+    description: cleanText(promotion?.description) || "",
+  };
 }
 
 function normalizePromo(promo) {
@@ -841,6 +854,7 @@ async function syncClientData() {
   saveState();
   renderHistory();
   renderProfile();
+  renderHome();
   renderFeatured();
   renderMenu();
 }

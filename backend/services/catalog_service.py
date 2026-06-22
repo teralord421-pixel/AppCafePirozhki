@@ -11,6 +11,7 @@ from models.city import Branch, City
 from models.menu import MenuItem, ProductDetail
 from models.order import Order
 from models.promo_code import PromoCode
+from models.promotion import Promotion
 from schemas.catalog import (
     BranchCreate,
     BranchOut,
@@ -24,6 +25,7 @@ from schemas.catalog import (
     ProductDetailsOut,
     PromoCreate,
     PromoOut,
+    PromotionCatalogOut,
 )
 
 
@@ -186,6 +188,10 @@ async def get_catalog(db: AsyncSession) -> CatalogOut:
     menu_items = menu_result.scalars().all()
     promo_result = await db.execute(select(PromoCode).order_by(PromoCode.title))
     promos = promo_result.scalars().all()
+    promotion_result = await db.execute(
+        select(Promotion).where(Promotion.is_active.is_(True)).order_by(Promotion.id.desc())
+    )
+    active_promotions = promotion_result.scalars().all()
 
     product_details: dict[str, ProductDetailsOut] = {}
     menu_out = []
@@ -209,6 +215,14 @@ async def get_catalog(db: AsyncSession) -> CatalogOut:
                 minSubtotal=p.min_subtotal,
             )
             for p in promos
+        ],
+        promotions=[
+            PromotionCatalogOut(
+                id=promotion.id,
+                title=promotion.title,
+                description=promotion.description,
+            )
+            for promotion in active_promotions
         ],
     )
 

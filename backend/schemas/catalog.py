@@ -117,6 +117,12 @@ class PromoOut(BaseModel):
     model_config = {"populate_by_name": True}
 
 
+class PromotionCatalogOut(BaseModel):
+    id: int
+    title: str
+    description: str
+
+
 class PromoCreate(BaseModel):
     id: str | None = None
     title: str
@@ -138,6 +144,7 @@ class CatalogOut(BaseModel):
     menu_items: list[MenuItemOut] = Field(alias="menuItems")
     product_details: dict[str, ProductDetailsOut] = Field(alias="productDetails")
     promos: list[PromoOut]
+    promotions: list[PromotionCatalogOut] = Field(default_factory=list)
 
     model_config = {"populate_by_name": True}
 

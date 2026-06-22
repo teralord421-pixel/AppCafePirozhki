@@ -1,4 +1,4 @@
-const cacheName = "pyrizhky-lab-v8";
+const cacheName = "pyrizhky-lab-v9";
 const assets = [
   "./",
   "./index.html",
