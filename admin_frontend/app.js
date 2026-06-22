@@ -18,6 +18,13 @@ const ROLE_KEY = "admin_role";
 let citiesCache = [];
 let selectedCityId = null;
 
+const MENU_CATEGORY_LABELS = {
+  fried: "Смажені",
+  baked: "Печені",
+  sets: "Набори",
+  drinks: "Напої",
+};
+
 // ─── Auth helpers ───────────────────────────────────────────
 
 function getToken() {
@@ -158,6 +165,8 @@ function initDashboard() {
   initTabs();
   loadUsers();
   loadOrders();
+  loadMenuItems();
+  loadPromos();
   loadPromotions();
   loadCities();
   initModals();
@@ -625,6 +634,213 @@ async function saveBranch(e) {
   }
 }
 
+// ─── Menu CRUD ──────────────────────────────────────────────
+
+function splitList(value) {
+  return String(value || "")
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}
+
+function joinList(value) {
+  return Array.isArray(value) ? value.join(", ") : "";
+}
+
+async function loadMenuItems() {
+  const tbody = document.getElementById("menu-tbody");
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="6" class="loading">Загрузка...</td></tr>';
+
+  try {
+    const items = await apiRequest("/api/admin/menu");
+    if (!items.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Нет товаров</td></tr>';
+      return;
+    }
+    tbody.innerHTML = items
+      .map(
+        (item) => `
+      <tr>
+        <td>${escapeHtml(item.id)}</td>
+        <td>${escapeHtml(item.name)}</td>
+        <td>${escapeHtml(MENU_CATEGORY_LABELS[item.category] || item.category)}</td>
+        <td>${item.price} грн</td>
+        <td>${item.featured ? "да" : "—"}</td>
+        <td class="actions-cell">
+          <button class="btn btn-secondary btn-sm" onclick="editMenuItem('${escapeHtml(item.id)}')">Изменить</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteMenuItem('${escapeHtml(item.id)}')">Удалить</button>
+        </td>
+      </tr>`
+      )
+      .join("");
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="6" class="alert-error">${err.message}</td></tr>`;
+  }
+}
+
+function openMenuModal(item = null) {
+  document.getElementById("menu-modal-title").textContent = item ? "Редактировать товар" : "Новый товар";
+  document.getElementById("menu-id").value = item?.id || "";
+  document.getElementById("menu-name").value = item?.name || "";
+  document.getElementById("menu-category").value = item?.category || "fried";
+  document.getElementById("menu-mark").value = item?.mark || "";
+  document.getElementById("menu-price").value = item?.price || "";
+  document.getElementById("menu-description").value = item?.description || "";
+  document.getElementById("menu-tags").value = joinList(item?.tags);
+  document.getElementById("menu-image").value = item?.image || "";
+  document.getElementById("menu-weight").value = item?.details?.weight || "";
+  document.getElementById("menu-kcal").value = item?.details?.kcal || "";
+  document.getElementById("menu-ingredients").value = joinList(item?.details?.ingredients);
+  document.getElementById("menu-allergens").value = joinList(item?.details?.allergens);
+  document.getElementById("menu-featured").checked = Boolean(item?.featured);
+  document.getElementById("menu-modal").classList.add("open");
+}
+
+async function editMenuItem(id) {
+  try {
+    const item = await apiRequest(`/api/admin/menu/${encodeURIComponent(id)}`);
+    openMenuModal(item);
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+async function deleteMenuItem(id) {
+  if (!confirm("Удалить товар?")) return;
+  try {
+    await apiRequest(`/api/admin/menu/${encodeURIComponent(id)}`, { method: "DELETE" });
+    loadMenuItems();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+async function saveMenuItem(e) {
+  e.preventDefault();
+  const id = document.getElementById("menu-id").value;
+  const body = {
+    category: document.getElementById("menu-category").value,
+    mark: document.getElementById("menu-mark").value.trim(),
+    name: document.getElementById("menu-name").value.trim(),
+    description: document.getElementById("menu-description").value.trim(),
+    price: parseInt(document.getElementById("menu-price").value, 10),
+    tags: splitList(document.getElementById("menu-tags").value),
+    featured: document.getElementById("menu-featured").checked,
+    image: document.getElementById("menu-image").value.trim(),
+    weight: document.getElementById("menu-weight").value.trim() || "уточнюйте на точці",
+    kcal: document.getElementById("menu-kcal").value.trim() || "уточнюйте",
+    ingredients: splitList(document.getElementById("menu-ingredients").value),
+    allergens: splitList(document.getElementById("menu-allergens").value),
+  };
+
+  try {
+    if (id) {
+      await apiRequest(`/api/admin/menu/${encodeURIComponent(id)}`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      });
+    } else {
+      await apiRequest("/api/admin/menu", { method: "POST", body: JSON.stringify(body) });
+    }
+    document.getElementById("menu-modal").classList.remove("open");
+    loadMenuItems();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+// ─── Catalog promos CRUD ────────────────────────────────────
+
+async function loadPromos() {
+  const tbody = document.getElementById("promos-tbody");
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="6" class="loading">Загрузка...</td></tr>';
+
+  try {
+    const promos = await apiRequest("/api/admin/promos");
+    if (!promos.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Нет промокодов</td></tr>';
+      return;
+    }
+    tbody.innerHTML = promos
+      .map(
+        (promo) => `
+      <tr>
+        <td>${escapeHtml(promo.id)}</td>
+        <td>${escapeHtml(promo.title)}</td>
+        <td><code>${escapeHtml(promo.code)}</code></td>
+        <td>${promo.discount}%</td>
+        <td>${promo.minSubtotal} грн</td>
+        <td class="actions-cell">
+          <button class="btn btn-secondary btn-sm" onclick="editPromo('${escapeHtml(promo.id)}')">Изменить</button>
+          <button class="btn btn-danger btn-sm" onclick="deletePromo('${escapeHtml(promo.id)}')">Удалить</button>
+        </td>
+      </tr>`
+      )
+      .join("");
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="6" class="alert-error">${err.message}</td></tr>`;
+  }
+}
+
+function openPromoModal(promo = null) {
+  document.getElementById("promo-modal-title").textContent = promo ? "Редактировать промокод" : "Новый промокод";
+  document.getElementById("promo-id").value = promo?.id || "";
+  document.getElementById("promo-title").value = promo?.title || "";
+  document.getElementById("promo-text").value = promo?.text || "";
+  document.getElementById("promo-code").value = promo?.code || "";
+  document.getElementById("promo-discount").value = promo?.discount ?? 10;
+  document.getElementById("promo-min-subtotal").value = promo?.minSubtotal ?? 0;
+  document.getElementById("promo-modal").classList.add("open");
+}
+
+async function editPromo(id) {
+  try {
+    const promo = await apiRequest(`/api/admin/promos/${encodeURIComponent(id)}`);
+    openPromoModal(promo);
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+async function deletePromo(id) {
+  if (!confirm("Удалить промокод?")) return;
+  try {
+    await apiRequest(`/api/admin/promos/${encodeURIComponent(id)}`, { method: "DELETE" });
+    loadPromos();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+async function savePromo(e) {
+  e.preventDefault();
+  const id = document.getElementById("promo-id").value;
+  const body = {
+    title: document.getElementById("promo-title").value.trim(),
+    text: document.getElementById("promo-text").value.trim(),
+    code: document.getElementById("promo-code").value.trim().toUpperCase(),
+    discount: parseInt(document.getElementById("promo-discount").value, 10),
+    minSubtotal: parseInt(document.getElementById("promo-min-subtotal").value, 10) || 0,
+  };
+
+  try {
+    if (id) {
+      await apiRequest(`/api/admin/promos/${encodeURIComponent(id)}`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      });
+    } else {
+      await apiRequest("/api/admin/promos", { method: "POST", body: JSON.stringify(body) });
+    }
+    document.getElementById("promo-modal").classList.remove("open");
+    loadPromos();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
 // ─── Promotions CRUD ────────────────────────────────────────
 
 async function loadPromotions() {
@@ -720,6 +936,18 @@ function initModals() {
   document.getElementById("order-form").addEventListener("submit", saveOrder);
   document.getElementById("order-cancel").addEventListener("click", () =>
     document.getElementById("order-modal").classList.remove("open")
+  );
+
+  document.getElementById("add-menu-btn").addEventListener("click", () => openMenuModal());
+  document.getElementById("menu-form").addEventListener("submit", saveMenuItem);
+  document.getElementById("menu-cancel").addEventListener("click", () =>
+    document.getElementById("menu-modal").classList.remove("open")
+  );
+
+  document.getElementById("add-promo-btn").addEventListener("click", () => openPromoModal());
+  document.getElementById("promo-form").addEventListener("submit", savePromo);
+  document.getElementById("promo-cancel").addEventListener("click", () =>
+    document.getElementById("promo-modal").classList.remove("open")
   );
 
   document.getElementById("add-promotion-btn").addEventListener("click", () => openPromotionModal());
