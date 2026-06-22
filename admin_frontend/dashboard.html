@@ -1,44 +1,44 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="uk">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Панель управления — Админ</title>
+  <title>Панель керування — Адмін</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="dashboard">
     <header class="dashboard-header">
-      <h1>Панель управления</h1>
+      <h1>Панель керування</h1>
       <div class="header-actions">
         <span id="user-badge" class="user-badge"></span>
-        <button id="logout-btn" class="btn btn-secondary btn-sm">Выйти</button>
+        <button id="logout-btn" class="btn btn-secondary btn-sm">Вийти</button>
       </div>
     </header>
 
     <nav class="tabs">
-      <button class="tab active" data-panel="panel-users">Пользователи</button>
-      <button class="tab" data-panel="panel-orders">Заказы</button>
-      <button class="tab" data-panel="panel-menu">Товары</button>
-      <button class="tab" data-panel="panel-promos">Промокоды</button>
-      <button class="tab" data-panel="panel-promotions">Акции</button>
-      <button class="tab" data-panel="panel-locations">Локации</button>
+      <button class="tab active" data-panel="panel-users">Користувачі</button>
+      <button class="tab" data-panel="panel-orders">Замовлення</button>
+      <button class="tab" data-panel="panel-menu">Товари</button>
+      <button class="tab" data-panel="panel-promos">Промокоди</button>
+      <button class="tab" data-panel="panel-promotions">Акції</button>
+      <button class="tab" data-panel="panel-locations">Локації</button>
     </nav>
 
     <!-- Users -->
     <section id="panel-users" class="panel active">
       <div class="panel-toolbar">
-        <h2>Пользователи</h2>
-        <button id="add-user-btn" class="btn btn-primary btn-sm">+ Добавить</button>
+        <h2>Користувачі</h2>
+        <button id="add-user-btn" class="btn btn-primary btn-sm">+ Додати</button>
       </div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
               <th>ID</th>
-              <th>Логин</th>
+              <th>Логін</th>
               <th>Роль</th>
-              <th>Действия</th>
+              <th>Дії</th>
             </tr>
           </thead>
           <tbody id="users-tbody"></tbody>
@@ -49,18 +49,18 @@
     <!-- Orders -->
     <section id="panel-orders" class="panel">
       <div class="panel-toolbar">
-        <h2>Заказы</h2>
-        <button id="add-order-btn" class="btn btn-primary btn-sm">+ Добавить</button>
+        <h2>Замовлення</h2>
+        <button id="add-order-btn" class="btn btn-primary btn-sm">+ Додати</button>
       </div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
               <th>ID</th>
-              <th>Клиент / телефон</th>
-              <th>Работник</th>
+              <th>Клієнт / телефон</th>
+              <th>Працівник</th>
               <th>Статус</th>
-              <th>Действия</th>
+              <th>Дії</th>
             </tr>
           </thead>
           <tbody id="orders-tbody"></tbody>
@@ -71,20 +71,20 @@
     <!-- Locations -->
     <section id="panel-locations" class="panel">
       <div class="panel-toolbar">
-        <h2>Города</h2>
-        <button id="add-city-btn" class="btn btn-primary btn-sm">+ Добавить город</button>
+        <h2>Міста</h2>
+        <button id="add-city-btn" class="btn btn-primary btn-sm">+ Додати місто</button>
       </div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
               <th>ID</th>
-              <th>Название</th>
+              <th>Назва</th>
               <th>Доставка</th>
-              <th>Бесплатно от</th>
+              <th>Безкоштовно від</th>
               <th>ETA</th>
-              <th>Филиалы</th>
-              <th>Действия</th>
+              <th>Філії</th>
+              <th>Дії</th>
             </tr>
           </thead>
           <tbody id="cities-tbody"></tbody>
@@ -92,20 +92,20 @@
       </div>
 
       <div class="panel-toolbar locations-branches-toolbar">
-        <h2 id="branches-panel-title">Филиалы</h2>
-        <button id="add-branch-btn" class="btn btn-primary btn-sm" disabled>+ Добавить филиал</button>
+        <h2 id="branches-panel-title">Філії</h2>
+        <button id="add-branch-btn" class="btn btn-primary btn-sm" disabled>+ Додати філію</button>
       </div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
               <th>ID</th>
-              <th>Название</th>
-              <th>Адрес</th>
+              <th>Назва</th>
+              <th>Адреса</th>
               <th>Телефон</th>
-              <th>Часы</th>
-              <th>Самовывоз</th>
-              <th>Действия</th>
+              <th>Години</th>
+              <th>Самовивіз</th>
+              <th>Дії</th>
             </tr>
           </thead>
           <tbody id="branches-tbody"></tbody>
@@ -116,19 +116,19 @@
     <!-- Menu -->
     <section id="panel-menu" class="panel">
       <div class="panel-toolbar">
-        <h2>Товары</h2>
-        <button id="add-menu-btn" class="btn btn-primary btn-sm">+ Добавить</button>
+        <h2>Товари</h2>
+        <button id="add-menu-btn" class="btn btn-primary btn-sm">+ Додати</button>
       </div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
               <th>ID</th>
-              <th>Название</th>
-              <th>Категория</th>
-              <th>Цена</th>
-              <th>Хит</th>
-              <th>Действия</th>
+              <th>Назва</th>
+              <th>Категорія</th>
+              <th>Ціна</th>
+              <th>Хіт</th>
+              <th>Дії</th>
             </tr>
           </thead>
           <tbody id="menu-tbody"></tbody>
@@ -139,19 +139,19 @@
     <!-- Promos -->
     <section id="panel-promos" class="panel">
       <div class="panel-toolbar">
-        <h2>Промокоды</h2>
-        <button id="add-promo-btn" class="btn btn-primary btn-sm">+ Добавить</button>
+        <h2>Промокоди</h2>
+        <button id="add-promo-btn" class="btn btn-primary btn-sm">+ Додати</button>
       </div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
               <th>ID</th>
-              <th>Название</th>
+              <th>Назва</th>
               <th>Код</th>
-              <th>Скидка</th>
-              <th>Мин. сумма</th>
-              <th>Действия</th>
+              <th>Знижка</th>
+              <th>Мін. сума</th>
+              <th>Дії</th>
             </tr>
           </thead>
           <tbody id="promos-tbody"></tbody>
@@ -162,18 +162,18 @@
     <!-- Promotions -->
     <section id="panel-promotions" class="panel">
       <div class="panel-toolbar">
-        <h2>Акции</h2>
-        <button id="add-promotion-btn" class="btn btn-primary btn-sm">+ Добавить</button>
+        <h2>Акції</h2>
+        <button id="add-promotion-btn" class="btn btn-primary btn-sm">+ Додати</button>
       </div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
               <th>ID</th>
-              <th>Название</th>
-              <th>Описание</th>
+              <th>Назва</th>
+              <th>Опис</th>
               <th>Статус</th>
-              <th>Действия</th>
+              <th>Дії</th>
             </tr>
           </thead>
           <tbody id="promotions-tbody"></tbody>
@@ -185,28 +185,28 @@
   <!-- User modal -->
   <div id="user-modal" class="modal-overlay">
     <div class="modal">
-      <h3 id="user-modal-title">Новый пользователь</h3>
+      <h3 id="user-modal-title">Новий користувач</h3>
       <form id="user-form">
         <input type="hidden" id="user-id">
         <div class="form-group">
-          <label for="user-username">Логин</label>
+          <label for="user-username">Логін</label>
           <input type="text" id="user-username" required>
         </div>
         <div class="form-group">
           <label for="user-password">Пароль</label>
-          <input type="password" id="user-password" placeholder="Оставьте пустым при редактировании">
+          <input type="password" id="user-password" placeholder="Залиште порожнім під час редагування">
         </div>
         <div class="form-group">
           <label for="user-role">Роль</label>
           <select id="user-role">
-            <option value="client">client</option>
-            <option value="worker">worker</option>
-            <option value="admin">admin</option>
+            <option value="client">Клієнт</option>
+            <option value="worker">Працівник</option>
+            <option value="admin">Адміністратор</option>
           </select>
         </div>
         <div class="modal-actions">
-          <button type="button" id="user-cancel" class="btn btn-secondary">Отмена</button>
-          <button type="submit" class="btn btn-primary">Сохранить</button>
+          <button type="button" id="user-cancel" class="btn btn-secondary">Скасувати</button>
+          <button type="submit" class="btn btn-primary">Зберегти</button>
         </div>
       </form>
     </div>
@@ -215,19 +215,19 @@
   <!-- Order modal -->
   <div id="order-modal" class="modal-overlay">
     <div class="modal">
-      <h3 id="order-modal-title">Новый заказ</h3>
+      <h3 id="order-modal-title">Нове замовлення</h3>
       <form id="order-form">
         <input type="hidden" id="order-id">
         <div class="form-group">
-          <label for="order-city-id">Город</label>
+          <label for="order-city-id">Місто</label>
           <select id="order-city-id" required></select>
         </div>
         <div class="form-group">
-          <label for="order-branch-id">Филиал</label>
+          <label for="order-branch-id">Філія</label>
           <select id="order-branch-id" required></select>
         </div>
         <div class="form-group">
-          <label for="order-client-name">Имя клиента</label>
+          <label for="order-client-name">Ім'я клієнта</label>
           <input type="text" id="order-client-name" placeholder="Олена">
         </div>
         <div class="form-group">
@@ -235,22 +235,22 @@
           <input type="text" id="order-client-phone" placeholder="+380...">
         </div>
         <div class="form-group">
-          <label for="order-worker-id">ID работника (необязательно)</label>
+          <label for="order-worker-id">ID працівника (необов'язково)</label>
           <input type="number" id="order-worker-id" min="1">
         </div>
         <div class="form-group">
           <label for="order-status">Статус</label>
           <select id="order-status">
-            <option value="new">new</option>
-            <option value="cooking">cooking</option>
-            <option value="ready">ready</option>
-            <option value="done">done</option>
-            <option value="canceled">canceled</option>
+            <option value="new">Нове</option>
+            <option value="cooking">Готуємо</option>
+            <option value="ready">Готово</option>
+            <option value="done">Видано</option>
+            <option value="canceled">Скасовано</option>
           </select>
         </div>
         <div class="modal-actions">
-          <button type="button" id="order-cancel" class="btn btn-secondary">Отмена</button>
-          <button type="submit" class="btn btn-primary">Сохранить</button>
+          <button type="button" id="order-cancel" class="btn btn-secondary">Скасувати</button>
+          <button type="submit" class="btn btn-primary">Зберегти</button>
         </div>
       </form>
     </div>
@@ -259,28 +259,28 @@
   <!-- City modal -->
   <div id="city-modal" class="modal-overlay">
     <div class="modal">
-      <h3 id="city-modal-title">Новый город</h3>
+      <h3 id="city-modal-title">Нове місто</h3>
       <form id="city-form">
         <input type="hidden" id="city-id">
         <div class="form-group">
-          <label for="city-name">Название</label>
+          <label for="city-name">Назва</label>
           <input type="text" id="city-name" required>
         </div>
         <div class="form-group">
-          <label for="city-delivery-fee">Стоимость доставки (грн)</label>
+          <label for="city-delivery-fee">Вартість доставки (грн)</label>
           <input type="number" id="city-delivery-fee" min="0" value="0" required>
         </div>
         <div class="form-group">
-          <label for="city-free-delivery-from">Бесплатная доставка от (грн)</label>
+          <label for="city-free-delivery-from">Безкоштовна доставка від (грн)</label>
           <input type="number" id="city-free-delivery-from" min="0" value="0" required>
         </div>
         <div class="form-group">
-          <label for="city-delivery-eta">Время доставки</label>
+          <label for="city-delivery-eta">Час доставки</label>
           <input type="text" id="city-delivery-eta" placeholder="25-35 хв">
         </div>
         <div class="modal-actions">
-          <button type="button" id="city-cancel" class="btn btn-secondary">Отмена</button>
-          <button type="submit" class="btn btn-primary">Сохранить</button>
+          <button type="button" id="city-cancel" class="btn btn-secondary">Скасувати</button>
+          <button type="submit" class="btn btn-primary">Зберегти</button>
         </div>
       </form>
     </div>
@@ -289,19 +289,19 @@
   <!-- Branch modal -->
   <div id="branch-modal" class="modal-overlay">
     <div class="modal">
-      <h3 id="branch-modal-title">Новый филиал</h3>
+      <h3 id="branch-modal-title">Нова філія</h3>
       <form id="branch-form">
         <input type="hidden" id="branch-id">
         <div class="form-group">
-          <label for="branch-city-id">Город</label>
+          <label for="branch-city-id">Місто</label>
           <select id="branch-city-id" required></select>
         </div>
         <div class="form-group">
-          <label for="branch-name">Название</label>
+          <label for="branch-name">Назва</label>
           <input type="text" id="branch-name" required>
         </div>
         <div class="form-group">
-          <label for="branch-address">Адрес</label>
+          <label for="branch-address">Адреса</label>
           <input type="text" id="branch-address" required>
         </div>
         <div class="form-group">
@@ -309,16 +309,16 @@
           <input type="text" id="branch-phone" placeholder="+380...">
         </div>
         <div class="form-group">
-          <label for="branch-hours">Часы работы</label>
+          <label for="branch-hours">Години роботи</label>
           <input type="text" id="branch-hours" placeholder="08:00-21:00">
         </div>
         <div class="form-group">
-          <label for="branch-pickup-eta">Самовывоз (ETA)</label>
+          <label for="branch-pickup-eta">Самовивіз (ETA)</label>
           <input type="text" id="branch-pickup-eta" placeholder="7-10 хв">
         </div>
         <div class="modal-actions">
-          <button type="button" id="branch-cancel" class="btn btn-secondary">Отмена</button>
-          <button type="submit" class="btn btn-primary">Сохранить</button>
+          <button type="button" id="branch-cancel" class="btn btn-secondary">Скасувати</button>
+          <button type="submit" class="btn btn-primary">Зберегти</button>
         </div>
       </form>
     </div>
@@ -327,16 +327,16 @@
   <!-- Menu modal -->
   <div id="menu-modal" class="modal-overlay">
     <div class="modal modal-wide">
-      <h3 id="menu-modal-title">Новый товар</h3>
+      <h3 id="menu-modal-title">Новий товар</h3>
       <form id="menu-form">
         <input type="hidden" id="menu-id">
         <div class="form-grid">
           <div class="form-group">
-            <label for="menu-name">Название</label>
+            <label for="menu-name">Назва</label>
             <input type="text" id="menu-name" required>
           </div>
           <div class="form-group">
-            <label for="menu-category">Категория</label>
+            <label for="menu-category">Категорія</label>
             <select id="menu-category" required>
               <option value="fried">Смажені</option>
               <option value="baked">Печені</option>
@@ -345,27 +345,27 @@
             </select>
           </div>
           <div class="form-group">
-            <label for="menu-mark">Метка</label>
+            <label for="menu-mark">Мітка</label>
             <input type="text" id="menu-mark" maxlength="8" placeholder="К">
           </div>
           <div class="form-group">
-            <label for="menu-price">Цена (грн)</label>
+            <label for="menu-price">Ціна (грн)</label>
             <input type="number" id="menu-price" min="1" required>
           </div>
           <div class="form-group span-2">
-            <label for="menu-description">Описание</label>
+            <label for="menu-description">Опис</label>
             <textarea id="menu-description" rows="2"></textarea>
           </div>
           <div class="form-group span-2">
-            <label for="menu-tags">Теги (через запятую)</label>
+            <label for="menu-tags">Теги (через кому)</label>
             <input type="text" id="menu-tags" placeholder="хіт, вегетаріанський">
           </div>
           <div class="form-group span-2">
-            <label for="menu-image">URL изображения</label>
+            <label for="menu-image">URL зображення</label>
             <input type="text" id="menu-image" placeholder="https://...">
           </div>
           <div class="form-group">
-            <label for="menu-weight">Вес</label>
+            <label for="menu-weight">Вага</label>
             <input type="text" id="menu-weight" placeholder="95 г">
           </div>
           <div class="form-group">
@@ -373,23 +373,23 @@
             <input type="text" id="menu-kcal" placeholder="214 ккал">
           </div>
           <div class="form-group span-2">
-            <label for="menu-ingredients">Ингредиенты (через запятую)</label>
+            <label for="menu-ingredients">Інгредієнти (через кому)</label>
             <input type="text" id="menu-ingredients">
           </div>
           <div class="form-group span-2">
-            <label for="menu-allergens">Аллергены (через запятую)</label>
+            <label for="menu-allergens">Алергени (через кому)</label>
             <input type="text" id="menu-allergens">
           </div>
           <div class="form-group span-2">
             <label>
               <input type="checkbox" id="menu-featured">
-              Показывать в хитах
+              Показувати в хітах
             </label>
           </div>
         </div>
         <div class="modal-actions">
-          <button type="button" id="menu-cancel" class="btn btn-secondary">Отмена</button>
-          <button type="submit" class="btn btn-primary">Сохранить</button>
+          <button type="button" id="menu-cancel" class="btn btn-secondary">Скасувати</button>
+          <button type="submit" class="btn btn-primary">Зберегти</button>
         </div>
       </form>
     </div>
@@ -398,15 +398,15 @@
   <!-- Promo modal -->
   <div id="promo-modal" class="modal-overlay">
     <div class="modal">
-      <h3 id="promo-modal-title">Новый промокод</h3>
+      <h3 id="promo-modal-title">Новий промокод</h3>
       <form id="promo-form">
         <input type="hidden" id="promo-id">
         <div class="form-group">
-          <label for="promo-title">Название</label>
+          <label for="promo-title">Назва</label>
           <input type="text" id="promo-title" required>
         </div>
         <div class="form-group">
-          <label for="promo-text">Описание</label>
+          <label for="promo-text">Опис</label>
           <textarea id="promo-text" rows="3"></textarea>
         </div>
         <div class="form-group">
@@ -414,16 +414,16 @@
           <input type="text" id="promo-code" required placeholder="SVOI10">
         </div>
         <div class="form-group">
-          <label for="promo-discount">Скидка (%)</label>
+          <label for="promo-discount">Знижка (%)</label>
           <input type="number" id="promo-discount" min="1" max="90" value="10" required>
         </div>
         <div class="form-group">
-          <label for="promo-min-subtotal">Мин. сумма заказа (грн)</label>
+          <label for="promo-min-subtotal">Мін. сума замовлення (грн)</label>
           <input type="number" id="promo-min-subtotal" min="0" value="0" required>
         </div>
         <div class="modal-actions">
-          <button type="button" id="promo-cancel" class="btn btn-secondary">Отмена</button>
-          <button type="submit" class="btn btn-primary">Сохранить</button>
+          <button type="button" id="promo-cancel" class="btn btn-secondary">Скасувати</button>
+          <button type="submit" class="btn btn-primary">Зберегти</button>
         </div>
       </form>
     </div>
@@ -432,15 +432,15 @@
   <!-- Promotion modal -->
   <div id="promotion-modal" class="modal-overlay">
     <div class="modal">
-      <h3 id="promotion-modal-title">Новая акция</h3>
+      <h3 id="promotion-modal-title">Нова акція</h3>
       <form id="promotion-form">
         <input type="hidden" id="promotion-id">
         <div class="form-group">
-          <label for="promotion-title">Название</label>
+          <label for="promotion-title">Назва</label>
           <input type="text" id="promotion-title" required>
         </div>
         <div class="form-group">
-          <label for="promotion-description">Описание</label>
+          <label for="promotion-description">Опис</label>
           <textarea id="promotion-description"></textarea>
         </div>
         <div class="form-group">
@@ -450,13 +450,13 @@
           </label>
         </div>
         <div class="modal-actions">
-          <button type="button" id="promotion-cancel" class="btn btn-secondary">Отмена</button>
-          <button type="submit" class="btn btn-primary">Сохранить</button>
+          <button type="button" id="promotion-cancel" class="btn btn-secondary">Скасувати</button>
+          <button type="submit" class="btn btn-primary">Зберегти</button>
         </div>
       </form>
     </div>
   </div>
 
-  <script src="app.js?v=4"></script>
+  <script src="app.js?v=6"></script>
 </body>
 </html>

@@ -25,6 +25,20 @@ const MENU_CATEGORY_LABELS = {
   drinks: "Напої",
 };
 
+const ROLE_LABELS = {
+  admin: "Адміністратор",
+  client: "Клієнт",
+  worker: "Працівник",
+};
+
+const ORDER_STATUS_LABELS = {
+  new: "Нове",
+  cooking: "Готуємо",
+  ready: "Готово",
+  done: "Видано",
+  canceled: "Скасовано",
+};
+
 // ─── Auth helpers ───────────────────────────────────────────
 
 function getToken() {
@@ -137,7 +151,7 @@ async function initLoginPage() {
       });
 
       if (data.role !== "admin") {
-        throw new Error("Доступ только для администраторов");
+        throw new Error("Доступ лише для адміністраторів");
       }
 
       setToken(data.access_token, data.role);
@@ -155,7 +169,7 @@ function initDashboard() {
   if (!requireAuth()) return;
 
   const role = localStorage.getItem(ROLE_KEY);
-  document.getElementById("user-badge").textContent = `Роль: ${role}`;
+  document.getElementById("user-badge").textContent = `Роль: ${ROLE_LABELS[role] || role}`;
 
   document.getElementById("logout-btn").addEventListener("click", () => {
     clearAuth();
@@ -187,29 +201,29 @@ function initTabs() {
 }
 
 function roleBadge(role) {
-  return `<span class="badge badge-${role}">${role}</span>`;
+  return `<span class="badge badge-${role}">${ROLE_LABELS[role] || role}</span>`;
 }
 
 function statusBadge(status) {
-  return `<span class="badge badge-${status}">${status}</span>`;
+  return `<span class="badge badge-${status}">${ORDER_STATUS_LABELS[status] || status}</span>`;
 }
 
 function activeBadge(isActive) {
   return isActive
-    ? '<span class="badge badge-active">active</span>'
-    : '<span class="badge badge-inactive">inactive</span>';
+    ? '<span class="badge badge-active">активна</span>'
+    : '<span class="badge badge-inactive">неактивна</span>';
 }
 
 // ─── Users CRUD ─────────────────────────────────────────────
 
 async function loadUsers() {
   const tbody = document.getElementById("users-tbody");
-  tbody.innerHTML = '<tr><td colspan="4" class="loading">Загрузка...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="4" class="loading">Завантаження...</td></tr>';
 
   try {
     const users = await apiRequest("/api/admin/users");
     if (!users.length) {
-      tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Нет пользователей</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Немає користувачів</td></tr>';
       return;
     }
     tbody.innerHTML = users
@@ -220,8 +234,8 @@ async function loadUsers() {
         <td>${escapeHtml(u.username)}</td>
         <td>${roleBadge(u.role)}</td>
         <td class="actions-cell">
-          <button class="btn btn-secondary btn-sm" onclick="editUser(${u.id})">Изменить</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id})">Удалить</button>
+          <button class="btn btn-secondary btn-sm" onclick="editUser(${u.id})">Змінити</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id})">Видалити</button>
         </td>
       </tr>`
       )
@@ -232,7 +246,7 @@ async function loadUsers() {
 }
 
 function openUserModal(user = null) {
-  document.getElementById("user-modal-title").textContent = user ? "Редактировать пользователя" : "Новый пользователь";
+  document.getElementById("user-modal-title").textContent = user ? "Редагувати користувача" : "Новий користувач";
   document.getElementById("user-id").value = user?.id || "";
   document.getElementById("user-username").value = user?.username || "";
   document.getElementById("user-password").value = "";
@@ -251,7 +265,7 @@ async function editUser(id) {
 }
 
 async function deleteUser(id) {
-  if (!confirm("Удалить пользователя?")) return;
+  if (!confirm("Видалити користувача?")) return;
   try {
     await apiRequest(`/api/admin/users/${id}`, { method: "DELETE" });
     loadUsers();
@@ -274,7 +288,7 @@ async function saveUser(e) {
     if (id) {
       await apiRequest(`/api/admin/users/${id}`, { method: "PUT", body: JSON.stringify(body) });
     } else {
-      if (!password) throw new Error("Пароль обязателен для нового пользователя");
+      if (!password) throw new Error("Пароль обов'язковий для нового користувача");
       body.password = password;
       await apiRequest("/api/admin/users", { method: "POST", body: JSON.stringify(body) });
     }
@@ -289,12 +303,12 @@ async function saveUser(e) {
 
 async function loadOrders() {
   const tbody = document.getElementById("orders-tbody");
-  tbody.innerHTML = '<tr><td colspan="5" class="loading">Загрузка...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="5" class="loading">Завантаження...</td></tr>';
 
   try {
     const orders = await apiRequest("/api/admin/orders");
     if (!orders.length) {
-      tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Нет заказов</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Немає замовлень</td></tr>';
       return;
     }
     tbody.innerHTML = orders
@@ -306,8 +320,8 @@ async function loadOrders() {
         <td>${o.worker_id ?? "—"}</td>
         <td>${statusBadge(o.status)}</td>
         <td class="actions-cell">
-          <button class="btn btn-secondary btn-sm" onclick="editOrder('${escapeHtml(o.id)}')">Изменить</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteOrder('${escapeHtml(o.id)}')">Удалить</button>
+          <button class="btn btn-secondary btn-sm" onclick="editOrder('${escapeHtml(o.id)}')">Змінити</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteOrder('${escapeHtml(o.id)}')">Видалити</button>
         </td>
       </tr>`
       )
@@ -350,7 +364,7 @@ function updateOrderBranchSelect(cityId, selectedBranchId = "") {
 }
 
 function openOrderModal(order = null) {
-  document.getElementById("order-modal-title").textContent = order ? "Редактировать заказ" : "Новый заказ";
+  document.getElementById("order-modal-title").textContent = order ? "Редагувати замовлення" : "Нове замовлення";
   document.getElementById("order-id").value = order?.id || "";
   const cityId = order?.cityId || order?.city_id || citiesCache[0]?.id || "";
   const branchId = order?.branchId || order?.branch_id || "";
@@ -374,7 +388,7 @@ async function editOrder(id) {
 }
 
 async function deleteOrder(id) {
-  if (!confirm("Удалить заказ?")) return;
+  if (!confirm("Видалити замовлення?")) return;
   try {
     await apiRequest(`/api/admin/orders/${id}`, { method: "DELETE" });
     loadOrders();
@@ -419,14 +433,14 @@ async function loadCities() {
   const tbody = document.getElementById("cities-tbody");
   if (!tbody) return;
 
-  tbody.innerHTML = '<tr><td colspan="7" class="loading">Загрузка...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="7" class="loading">Завантаження...</td></tr>';
 
   try {
     citiesCache = await apiRequest("/api/admin/cities");
     populateCitySelects();
 
     if (!citiesCache.length) {
-      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Нет городов</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Немає міст</td></tr>';
       renderBranches();
       return;
     }
@@ -446,9 +460,9 @@ async function loadCities() {
         <td>${escapeHtml(city.deliveryEta || "—")}</td>
         <td>${city.branches?.length || 0}</td>
         <td class="actions-cell">
-          <button class="btn btn-secondary btn-sm" onclick="selectCity('${escapeHtml(city.id)}')">Филиалы</button>
-          <button class="btn btn-secondary btn-sm" onclick="editCity('${escapeHtml(city.id)}')">Изменить</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteCity('${escapeHtml(city.id)}')">Удалить</button>
+          <button class="btn btn-secondary btn-sm" onclick="selectCity('${escapeHtml(city.id)}')">Філії</button>
+          <button class="btn btn-secondary btn-sm" onclick="editCity('${escapeHtml(city.id)}')">Змінити</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteCity('${escapeHtml(city.id)}')">Видалити</button>
         </td>
       </tr>`
       )
@@ -473,18 +487,18 @@ function renderBranches() {
 
   const city = citiesCache.find((item) => item.id === selectedCityId);
   if (!city) {
-    title.textContent = "Филиалы";
+    title.textContent = "Філії";
     addBtn.disabled = true;
-    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Выберите город</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Оберіть місто</td></tr>';
     return;
   }
 
-  title.textContent = `Филиалы: ${city.name}`;
+  title.textContent = `Філії: ${city.name}`;
   addBtn.disabled = false;
 
   const branches = city.branches || [];
   if (!branches.length) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Нет филиалов</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Немає філій</td></tr>';
     return;
   }
 
@@ -499,8 +513,8 @@ function renderBranches() {
       <td>${escapeHtml(branch.hours || "—")}</td>
       <td>${escapeHtml(branch.pickupEta || "—")}</td>
       <td class="actions-cell">
-        <button class="btn btn-secondary btn-sm" onclick="editBranch('${escapeHtml(branch.id)}')">Изменить</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteBranch('${escapeHtml(branch.id)}')">Удалить</button>
+        <button class="btn btn-secondary btn-sm" onclick="editBranch('${escapeHtml(branch.id)}')">Змінити</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteBranch('${escapeHtml(branch.id)}')">Видалити</button>
       </td>
     </tr>`
     )
@@ -508,7 +522,7 @@ function renderBranches() {
 }
 
 function openCityModal(city = null) {
-  document.getElementById("city-modal-title").textContent = city ? "Редактировать город" : "Новый город";
+  document.getElementById("city-modal-title").textContent = city ? "Редагувати місто" : "Нове місто";
   document.getElementById("city-id").value = city?.id || "";
   document.getElementById("city-name").value = city?.name || "";
   document.getElementById("city-delivery-fee").value = city?.deliveryFee ?? 0;
@@ -527,7 +541,7 @@ async function editCity(id) {
 }
 
 async function deleteCity(id) {
-  if (!confirm("Удалить город и все его филиалы?")) return;
+  if (!confirm("Видалити місто та всі його філії?")) return;
   try {
     await apiRequest(`/api/admin/cities/${id}`, { method: "DELETE" });
     if (selectedCityId === id) {
@@ -564,7 +578,7 @@ async function saveCity(e) {
 
 function openBranchModal(branch = null, cityId = null) {
   populateCitySelects();
-  document.getElementById("branch-modal-title").textContent = branch ? "Редактировать филиал" : "Новый филиал";
+  document.getElementById("branch-modal-title").textContent = branch ? "Редагувати філію" : "Нова філія";
   document.getElementById("branch-id").value = branch?.id || "";
   document.getElementById("branch-city-id").value = branch?.cityId || cityId || selectedCityId || citiesCache[0]?.id || "";
   document.getElementById("branch-city-id").disabled = Boolean(branch);
@@ -581,7 +595,7 @@ async function editBranch(id) {
     const cities = await apiRequest("/api/admin/cities");
     const branch = cities.flatMap((city) => city.branches || []).find((item) => item.id === id);
     if (!branch) {
-      throw new Error("Филиал не найден");
+      throw new Error("Філію не знайдено");
     }
     const city = cities.find((item) => (item.branches || []).some((b) => b.id === id));
     openBranchModal({ ...branch, cityId: city?.id }, city?.id);
@@ -591,7 +605,7 @@ async function editBranch(id) {
 }
 
 async function deleteBranch(id) {
-  if (!confirm("Удалить филиал?")) return;
+  if (!confirm("Видалити філію?")) return;
   try {
     await apiRequest(`/api/admin/branches/${id}`, { method: "DELETE" });
     loadCities();
@@ -650,12 +664,12 @@ function joinList(value) {
 async function loadMenuItems() {
   const tbody = document.getElementById("menu-tbody");
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="6" class="loading">Загрузка...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="6" class="loading">Завантаження...</td></tr>';
 
   try {
     const items = await apiRequest("/api/admin/menu");
     if (!items.length) {
-      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Нет товаров</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Немає товарів</td></tr>';
       return;
     }
     tbody.innerHTML = items
@@ -666,10 +680,10 @@ async function loadMenuItems() {
         <td>${escapeHtml(item.name)}</td>
         <td>${escapeHtml(MENU_CATEGORY_LABELS[item.category] || item.category)}</td>
         <td>${item.price} грн</td>
-        <td>${item.featured ? "да" : "—"}</td>
+        <td>${item.featured ? "так" : "—"}</td>
         <td class="actions-cell">
-          <button class="btn btn-secondary btn-sm" onclick="editMenuItem('${escapeHtml(item.id)}')">Изменить</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteMenuItem('${escapeHtml(item.id)}')">Удалить</button>
+          <button class="btn btn-secondary btn-sm" onclick="editMenuItem('${escapeHtml(item.id)}')">Змінити</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteMenuItem('${escapeHtml(item.id)}')">Видалити</button>
         </td>
       </tr>`
       )
@@ -680,7 +694,7 @@ async function loadMenuItems() {
 }
 
 function openMenuModal(item = null) {
-  document.getElementById("menu-modal-title").textContent = item ? "Редактировать товар" : "Новый товар";
+  document.getElementById("menu-modal-title").textContent = item ? "Редагувати товар" : "Новий товар";
   document.getElementById("menu-id").value = item?.id || "";
   document.getElementById("menu-name").value = item?.name || "";
   document.getElementById("menu-category").value = item?.category || "fried";
@@ -707,7 +721,7 @@ async function editMenuItem(id) {
 }
 
 async function deleteMenuItem(id) {
-  if (!confirm("Удалить товар?")) return;
+  if (!confirm("Видалити товар?")) return;
   try {
     await apiRequest(`/api/admin/menu/${encodeURIComponent(id)}`, { method: "DELETE" });
     loadMenuItems();
@@ -755,12 +769,12 @@ async function saveMenuItem(e) {
 async function loadPromos() {
   const tbody = document.getElementById("promos-tbody");
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="6" class="loading">Загрузка...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="6" class="loading">Завантаження...</td></tr>';
 
   try {
     const promos = await apiRequest("/api/admin/promos");
     if (!promos.length) {
-      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Нет промокодов</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Немає промокодів</td></tr>';
       return;
     }
     tbody.innerHTML = promos
@@ -773,8 +787,8 @@ async function loadPromos() {
         <td>${promo.discount}%</td>
         <td>${promo.minSubtotal} грн</td>
         <td class="actions-cell">
-          <button class="btn btn-secondary btn-sm" onclick="editPromo('${escapeHtml(promo.id)}')">Изменить</button>
-          <button class="btn btn-danger btn-sm" onclick="deletePromo('${escapeHtml(promo.id)}')">Удалить</button>
+          <button class="btn btn-secondary btn-sm" onclick="editPromo('${escapeHtml(promo.id)}')">Змінити</button>
+          <button class="btn btn-danger btn-sm" onclick="deletePromo('${escapeHtml(promo.id)}')">Видалити</button>
         </td>
       </tr>`
       )
@@ -785,7 +799,7 @@ async function loadPromos() {
 }
 
 function openPromoModal(promo = null) {
-  document.getElementById("promo-modal-title").textContent = promo ? "Редактировать промокод" : "Новый промокод";
+  document.getElementById("promo-modal-title").textContent = promo ? "Редагувати промокод" : "Новий промокод";
   document.getElementById("promo-id").value = promo?.id || "";
   document.getElementById("promo-title").value = promo?.title || "";
   document.getElementById("promo-text").value = promo?.text || "";
@@ -805,7 +819,7 @@ async function editPromo(id) {
 }
 
 async function deletePromo(id) {
-  if (!confirm("Удалить промокод?")) return;
+  if (!confirm("Видалити промокод?")) return;
   try {
     await apiRequest(`/api/admin/promos/${encodeURIComponent(id)}`, { method: "DELETE" });
     loadPromos();
@@ -845,12 +859,12 @@ async function savePromo(e) {
 
 async function loadPromotions() {
   const tbody = document.getElementById("promotions-tbody");
-  tbody.innerHTML = '<tr><td colspan="5" class="loading">Загрузка...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="5" class="loading">Завантаження...</td></tr>';
 
   try {
     const promotions = await apiRequest("/api/admin/promotions");
     if (!promotions.length) {
-      tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Нет акций</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Немає акцій</td></tr>';
       return;
     }
     tbody.innerHTML = promotions
@@ -862,8 +876,8 @@ async function loadPromotions() {
         <td>${escapeHtml(p.description)}</td>
         <td>${activeBadge(p.is_active)}</td>
         <td class="actions-cell">
-          <button class="btn btn-secondary btn-sm" onclick="editPromotion(${p.id})">Изменить</button>
-          <button class="btn btn-danger btn-sm" onclick="deletePromotion(${p.id})">Удалить</button>
+          <button class="btn btn-secondary btn-sm" onclick="editPromotion(${p.id})">Змінити</button>
+          <button class="btn btn-danger btn-sm" onclick="deletePromotion(${p.id})">Видалити</button>
         </td>
       </tr>`
       )
@@ -874,7 +888,7 @@ async function loadPromotions() {
 }
 
 function openPromotionModal(promotion = null) {
-  document.getElementById("promotion-modal-title").textContent = promotion ? "Редактировать акцию" : "Новая акция";
+  document.getElementById("promotion-modal-title").textContent = promotion ? "Редагувати акцію" : "Нова акція";
   document.getElementById("promotion-id").value = promotion?.id || "";
   document.getElementById("promotion-title").value = promotion?.title || "";
   document.getElementById("promotion-description").value = promotion?.description || "";
@@ -892,7 +906,7 @@ async function editPromotion(id) {
 }
 
 async function deletePromotion(id) {
-  if (!confirm("Удалить акцию?")) return;
+  if (!confirm("Видалити акцію?")) return;
   try {
     await apiRequest(`/api/admin/promotions/${id}`, { method: "DELETE" });
     loadPromotions();
