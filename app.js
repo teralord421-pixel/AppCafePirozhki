@@ -1627,7 +1627,6 @@ function renderCart() {
     <div class="summary-row total"><span>До сплати</span><strong>${money(total())}</strong></div>
     <div class="cart-actions">
       <button class="ghost-btn" type="button" data-action="clear-cart">Очистити</button>
-      <button class="primary-btn" type="button" data-nav="orders">Оформити</button>
     </div>
     <p class="form-hint">${currentCity().name}, ${currentBranch().name}. ${state.orderType === "pickup" ? `Самовивіз ${currentBranch().pickupEta}` : `Доставка ${currentCity().deliveryEta}`}.</p>
   `;
