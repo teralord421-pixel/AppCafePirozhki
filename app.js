@@ -383,6 +383,7 @@ let state = normalizeState(loadState());
 let menuItems = state.menuItems;
 let productDetails = state.productDetails;
 let promos = state.promos;
+let promotions = [];
 let authToken = state.authToken || null;
 let clientAuthToken = state.clientSession?.token || null;
 let serverOnline = false;
@@ -500,6 +501,16 @@ async function reloadCatalog() {
     promos,
   });
   saveState();
+}
+
+async function loadPromotions() {
+  try {
+    const data = await apiRequest("/api/promotions");
+    promotions = Array.isArray(data) ? data : [];
+  } catch {
+    promotions = [];
+  }
+  return promotions;
 }
 
 function mapServerOrder(order) {
@@ -1399,6 +1410,30 @@ function renderHome() {
   $("#homeDeliveryMeta").textContent = `${money(selectedCity.deliveryFee)} • ${selectedCity.deliveryEta}`;
   $("#homeDeliveryFree").textContent = `безкоштовно від ${money(selectedCity.freeDeliveryFrom)}`;
   $("#openStatus").textContent = `сьогодні ${selectedBranch.hours}`;
+  renderHomePromotions();
+}
+
+function renderHomePromotions() {
+  const section = $("#homePromotionsSection");
+  const container = $("#homePromotions");
+  if (!section || !container) return;
+
+  if (!promotions.length) {
+    section.hidden = true;
+    container.innerHTML = "";
+    return;
+  }
+
+  section.hidden = false;
+  container.innerHTML = promotions
+    .map(
+      (promotion) => `
+      <article class="promo-card home-promo-card">
+        <h2>${cleanText(promotion.title)}</h2>
+        <p>${cleanText(promotion.description)}</p>
+      </article>`
+    )
+    .join("");
 }
 
 function renderCategories() {
@@ -2727,7 +2762,7 @@ if (productImageFileInput && productImagePreviewEl) {
 }
 
 window.addEventListener("online", () => {
-  reloadCatalog()
+  Promise.all([reloadCatalog(), loadPromotions()])
     .then(() => {
       renderAll(false);
       if (authToken && (state.role === "worker" || state.role === "admin")) {
@@ -2762,7 +2797,7 @@ if ("serviceWorker" in navigator) {
 async function bootstrapApp() {
   renderAll(false);
   try {
-    await reloadCatalog();
+    await Promise.all([reloadCatalog(), loadPromotions()]);
     state = normalizeState({ ...state, menuItems, productDetails, promos });
     saveState();
     if (isClientLoggedIn()) {

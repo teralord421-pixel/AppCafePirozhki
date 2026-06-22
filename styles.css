@@ -825,6 +825,11 @@ p {
   background: rgba(212, 172, 55, 0.13);
 }
 
+.home-promo-card h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
 .promo-card p,
 .location-card p,
 .history-item p {
